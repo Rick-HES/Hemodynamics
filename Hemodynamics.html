@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Hemodynamics Interactive: Poiseuille’s Law + Arterioles</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a33;
+      --panel2:#0f1730;
+      --text:#eef1ff;
+      --muted:#c7cffc;
+      --border:rgba(255,255,255,.14);
+      --accent:#7aa2ff;
+      --good:#28e08b;
+      --warn:#ffd166;
+      --bad:#ff5d7a;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background: radial-gradient(1200px 700px at 20% 0%, #16224c 0%, var(--bg) 60%);
+      color:var(--text);
+    }
+    header{
+      padding:22px 18px 10px;
+      max-width:1100px;
+      margin:0 auto;
+    }
+    h1{
+      font-size:22px;
+      margin:0 0 6px 0;
+      letter-spacing:.2px;
+    }
+    .sub{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:14px 18px 40px;
+      display:grid;
+      gap:14px;
+      grid-template-columns: 1.2fr .8fr;
+    }
+    @media (max-width: 980px){
+      .wrap{grid-template-columns:1fr;}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:16px;
+      letter-spacing:.2px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .pill{
+      font-size:11px;
+      padding:3px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      background: rgba(0,0,0,.18);
+    }
+
+    .grid2{
+      display:grid;
+      gap:12px;
+      grid-template-columns: 1fr 1fr;
+    }
+    @media (max-width: 680px){
+      .grid2{grid-template-columns:1fr;}
+    }
+
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:baseline;
+      gap:10px;
+      margin: 8px 0 6px;
+    }
+    label{
+      font-size:13px;
+      color:var(--muted);
+    }
+    .val{
+      font-variant-numeric: tabular-nums;
+      font-size:13px;
+      color:var(--text);
+      opacity:.95;
+    }
+    input[type="range"]{
+      width:100%;
+      accent-color: var(--accent);
+    }
+    .hint{
+      font-size:12px;
+      color:rgba(199,207,252,.85);
+      line-height:1.35;
+      margin-top:6px;
+    }
+
+    .math{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+      background: rgba(0,0,0,.22);
+      border:1px solid var(--border);
+      padding:10px;
+      border-radius:12px;
+      line-height:1.45;
+      overflow:auto;
+    }
+    .math b{color:#ffffff}
+    .kpiGrid{
+      display:grid;
+      gap:10px;
+      grid-template-columns: 1fr 1fr;
+      margin-top:10px;
+    }
+    .kpi{
+      background: rgba(0,0,0,.20);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px;
+    }
+    .kpi .t{
+      color:var(--muted);
+      font-size:12px;
+      margin-bottom:6px;
+    }
+    .kpi .n{
+      font-size:18px;
+      font-variant-numeric: tabular-nums;
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+    }
+    .delta{
+      font-size:12px;
+      padding:2px 8px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--muted);
+      background: rgba(0,0,0,.18);
+    }
+
+    .btnRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    button{
+      background: rgba(122,162,255,.14);
+      color: var(--text);
+      border: 1px solid rgba(122,162,255,.35);
+      padding:8px 10px;
+      border-radius:12px;
+      cursor:pointer;
+      font-size:12px;
+    }
+    button:hover{filter:brightness(1.06)}
+    button.secondary{
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* Visualization */
+    .viz{
+      display:grid;
+      gap:12px;
+      grid-template-columns: 1fr;
+    }
+    .canvasWrap{
+      background: rgba(0,0,0,.18);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:10px;
+    }
+    canvas{width:100%; height:220px; display:block;}
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:8px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .dot{
+      display:inline-block;
+      width:10px;height:10px;border-radius:50%;
+      margin-right:6px; vertical-align:-1px;
+      background: var(--accent);
+    }
+
+    .callout{
+      border-left: 3px solid rgba(122,162,255,.65);
+      padding:10px 12px;
+      border-radius:12px;
+      background: rgba(122,162,255,.10);
+      color: rgba(238,241,255,.95);
+      font-size:12.5px;
+      line-height:1.45;
+      margin-top:10px;
+    }
+
+    .small{
+      font-size:11px;
+      color:rgba(199,207,252,.75);
+      margin-top:8px;
+      line-height:1.35;
+    }
+
+    .status{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:10px;
+      padding:10px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+    }
+    .status .left{
+      display:flex; flex-direction:column; gap:3px;
+    }
+    .status .title{
+      font-size:12px; color:var(--muted);
+    }
+    .status .desc{
+      font-size:13px;
+    }
+    .badge{
+      font-size:11px;
+      padding:4px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Hemodynamics Interactive: Poiseuille’s Law (Modified) + Arteriolar Control</h1>
+  <div class="sub">
+    Students manipulate <b>ΔP</b>, <b>r</b>, <b>viscosity (V)</b>, and <b>length (L)</b> and immediately see how blood flow (<b>Q</b>) changes.
+    Built from your slide ideas: <b>direct relationships</b> (ΔP, r⁴) and <b>indirect relationships</b> (V×L), plus the arterioles as key regulators. :contentReference[oaicite:1]{index=1}
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: Controls + math -->
+  <section class="card">
+    <h2>Adjust the variables <span class="pill">Slides 10–13</span></h2>
+
+    <div class="grid2">
+      <div>
+        <div class="row">
+          <label for="dp">ΔP (Pressure Gradient)</label>
+          <div class="val"><span id="dpVal"></span> mmHg</div>
+        </div>
+        <input id="dp" type="range" min="10" max="120" step="1" value="60"/>
+        <div class="hint">Direct relationship to Q: ↑ΔP → ↑Q (all else equal).</div>
+      </div>
+
+      <div>
+        <div class="row">
+          <label for="r">r (Arteriole Radius)</label>
+          <div class="val"><span id="rVal"></span> (relative)</div>
+        </div>
+        <input id="r" type="range" min="0.8" max="3.0" step="0.05" value="1.5"/>
+        <div class="hint"><b>Radius is raised to the 4th power</b>: small changes in r cause huge changes in Q.</div>
+      </div>
+
+      <div>
+        <div class="row">
+          <label for="visc">V (Blood Viscosity)</label>
+          <div class="val"><span id="vVal"></span> (relative)</div>
+        </div>
+        <input id="visc" type="range" min="0.7" max="3.0" step="0.05" value="1.0"/>
+        <div class="hint">Indirect relationship to Q: ↑viscosity → ↓Q (e.g., polycythemia).</div>
+      </div>
+
+      <div>
+        <div class="row">
+          <label for="len">L (Vessel Length)</label>
+          <div class="val"><span id="lVal"></span> (relative)</div>
+        </div>
+        <input id="len" type="range" min="0.7" max="3.0" step="0.05" value="1.0"/>
+        <div class="hint">Indirect relationship to Q: ↑length → ↓Q (e.g., more capillaries/angiogenesis).</div>
+      </div>
+    </div>
+
+    <div class="math" aria-label="equations">
+      <div><b>Modified Poiseuille’s Law (as in your slides):</b></div>
+      <div>Q = (ΔP · r<sup>4</sup>) / (V · L)</div>
+      <div style="margin-top:8px;"><b>Resistance form:</b></div>
+      <div>R = (V · L) / r<sup>4</sup></div>
+      <div>So: Q = ΔP / R</div>
+    </div>
+
+    <div class="kpiGrid">
+      <div class="kpi">
+        <div class="t">Flow (Q)</div>
+        <div class="n"><span id="qOut"></span> <span class="delta" id="qDelta"></span></div>
+      </div>
+      <div class="kpi">
+        <div class="t">Resistance (R)</div>
+        <div class="n"><span id="rOut"></span> <span class="delta" id="rDelta"></span></div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <b>Arteriolar regulation concept (Slide 11):</b><br/>
+      Click “Vasodilate” or “Vasoconstrict” to change radius quickly and observe how dramatic the r⁴ effect is.
+      The “Pressure status” indicator is intentionally simplified for teaching: vasodilation tends to lower local pressure,
+      vasoconstriction tends to raise it (qualitative).
+    </div>
+
+    <div class="btnRow">
+      <button id="vasodilate">Vasodilate (+20% r)</button>
+      <button id="vasoconstrict">Vasoconstrict (−20% r)</button>
+      <button id="anemia">Anemia (↓ V)</button>
+      <button id="poly">Polycythemia (↑ V)</button>
+      <button id="angio">Angiogenesis (↑ L)</button>
+      <button class="secondary" id="reset">Reset to Baseline</button>
+    </div>
+
+    <div class="status" id="pressureStatus">
+      <div class="left">
+        <div class="title">Qualitative “pressure status” (Slide 11 idea)</div>
+        <div class="desc" id="pDesc">—</div>
+      </div>
+      <div class="badge" id="pBadge">—</div>
+    </div>
+
+    <div class="small">
+      Instructor note: Units are intentionally “relative” for r, V, and L to focus on relationships:
+      <b>ΔP·r⁴ increases Q</b>, and <b>V·L decreases Q</b> (slides 10 & 13). :contentReference[oaicite:2]{index=2}
+    </div>
+  </section>
+
+  <!-- RIGHT: Visualization -->
+  <aside class="card viz">
+    <h2>Visualize what changed <span class="pill">Direct vs Indirect</span></h2>
+
+    <div class="canvasWrap">
+      <canvas id="bar"></canvas>
+      <div class="legend">
+        <span><span class="dot"></span>Relative effect size (normalized)</span>
+      </div>
+      <div class="hint">
+        Bars show how each term is contributing <i>right now</i>:
+        the numerator (ΔP and r⁴) pushes flow up; the denominator (V and L) pushes flow down.
+      </div>
+    </div>
+
+    <div class="canvasWrap">
+      <canvas id="vessel"></canvas>
+      <div class="hint">
+        Vessel radius is drawn to scale (relative). Particle speed represents relative Q.
+        This is a teaching visualization, not a clinical simulation.
+      </div>
+    </div>
+
+    <div class="card" style="padding:12px; border-radius:16px;">
+      <h2 style="margin:0 0 8px 0; font-size:14px;">Discussion prompts (quick)</h2>
+      <ul style="margin:0; padding-left:18px; color:var(--muted); font-size:12.5px; line-height:1.5;">
+        <li>Hold ΔP constant. How much does Q change if r increases by just 10%? Why?</li>
+        <li>Compare anemia vs polycythemia. What happens to Q, and what tradeoffs might exist?</li>
+        <li>If angiogenesis increases capillary length, why might flow decrease locally—but still help tissue oxygenation overall?</li>
+        <li>Which variable is the body most likely to adjust rapidly in the moment: ΔP, r, V, or L?</li>
+      </ul>
+    </div>
+  </aside>
+</div>
+
+<script>
+  // ---------- Helpers ----------
+  const el = (id) => document.getElementById(id);
+  const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
+  const fmt = (x, d=2) => Number(x).toFixed(d);
+
+  // Baseline settings (teaching baseline)
+  const BASE = { dp: 60, r: 1.50, v: 1.00, l: 1.00 };
+
+  // DOM
+  const dp = el("dp"), r = el("r"), v = el("visc"), l = el("len");
+  const dpVal = el("dpVal"), rVal = el("rVal"), vVal = el("vVal"), lVal = el("lVal");
+  const qOut = el("qOut"), rOut = el("rOut"), qDelta = el("qDelta"), rDelta = el("rDelta");
+
+  const pDesc = el("pDesc"), pBadge = el("pBadge");
+
+  // Canvases
+  const bar = el("bar");
+  const vessel = el("vessel");
+  const barCtx = bar.getContext("2d");
+  const vesselCtx = vessel.getContext("2d");
+
+  // Resize canvases to device pixels for crispness
+  function fitCanvas(c){
+    const rect = c.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    c.width = Math.max(1, Math.floor(rect.width * dpr));
+    c.height = Math.max(1, Math.floor(rect.height * dpr));
+    return dpr;
+  }
+
+  // Physics (teaching model)
+  function calcQ(dp, r, v, l){
+    return (dp * Math.pow(r,4)) / (v * l);
+  }
+  function calcR(r, v, l){
+    return (v * l) / Math.pow(r,4);
+  }
+
+  const Q_BASE = calcQ(BASE.dp, BASE.r, BASE.v, BASE.l);
+  const R_BASE = calcR(BASE.r, BASE.v, BASE.l);
+
+  function percentChange(x, base){
+    return ((x - base) / base) * 100;
+  }
+
+  // Qualitative pressure indicator (Slide 11 concept)
+  // NOTE: simplified heuristic: smaller radius -> "higher pressure", larger radius -> "lower pressure".
+  // This is meant as a teaching cue, not a quantitative pressure model.
+  function pressureStatus(rNow){
+    const ratio = rNow / BASE.r;
+    if (ratio >= 1.15) return { desc: "Vasodilation tendency → lower local pressure", badge: "Lower pressure (qualitative)" };
+    if (ratio <= 0.85) return { desc: "Vasoconstriction tendency → higher local pressure", badge: "Higher pressure (qualitative)" };
+    return { desc: "Near baseline tone", badge: "Baseline-ish" };
+  }
+
+  // Bar chart: show relative term magnitudes normalized
+  function drawBar(dpNow, rNow, vNow, lNow){
+    const dpr = fitCanvas(bar);
+    const ctx = barCtx;
+    const w = bar.width, h = bar.height;
+
+    ctx.clearRect(0,0,w,h);
+
+    // Values representing "push up" and "push down"
+    const up1 = dpNow;
+    const up2 = Math.pow(rNow,4);
+    const down1 = vNow;
+    const down2 = lNow;
+
+    // Normalize for display
+    const arr = [up1, up2, down1, down2];
+    const maxV = Math.max(...arr);
+
+    const labels = ["ΔP (up)", "r⁴ (up)", "V (down)", "L (down)"];
+
+    const pad = 22 * dpr;
+    const barW = (w - pad*2) / labels.length;
+    const baseY = h - pad;
+    const topY = pad;
+
+    // Axes
+    ctx.globalAlpha = 0.55;
+    ctx.strokeStyle = "rgba(255,255,255,.28)";
+    ctx.lineWidth = 1.2 * dpr;
+    ctx.beginPath();
+    ctx.moveTo(pad, baseY);
+    ctx.lineTo(w-pad, baseY);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Bars + labels
+    ctx.font = `${12*dpr}px system-ui`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    for(let i=0;i<labels.length;i++){
+      const v = arr[i];
+      const norm = v / maxV;
+      const bh = (baseY - topY) * norm * 0.92;
+      const x0 = pad + i*barW + barW*0.14;
+      const bw = barW*0.72;
+      const y0 = baseY - bh;
+
+      // Bar
+      ctx.fillStyle = "rgba(122,162,255,.55)";
+      ctx.fillRect(x0, y0, bw, bh);
+
+      // Label
+      ctx.fillStyle = "rgba(199,207,252,.9)";
+      ctx.fillText(labels[i], x0 + bw/2, baseY + 6*dpr);
+
+      // Value
+      ctx.fillStyle = "rgba(238,241,255,.92)";
+      ctx.font = `${11*dpr}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
+      ctx.fillText(fmt(v, (i===0)?0:2), x0 + bw/2, y0 - 14*dpr);
+      ctx.font = `${12*dpr}px system-ui`;
+    }
+  }
+
+  // Vessel animation
+  let t = 0;
+  function drawVessel(rNow, qNow){
+    const dpr = fitCanvas(vessel);
+    const ctx = vesselCtx;
+    const w = vessel.width, h = vessel.height;
+
+    ctx.clearRect(0,0,w,h);
+
+    // Vessel parameters
+    const midY = h * 0.52;
+    const leftX = w * 0.10;
+    const rightX = w * 0.90;
+
+    // Radius to pixels (relative scale)
+    const rPx = (rNow / 3.0) * (h * 0.22) + (h*0.05); // keep visible
+
+    // Flow speed normalized
+    const speed = clamp(qNow / Q_BASE, 0.2, 4.0);
+
+    // Draw vessel (tube)
+    ctx.strokeStyle = "rgba(255,255,255,.30)";
+    ctx.lineWidth = (rPx*2) * 0.06; // subtle outline
+    ctx.beginPath();
+    ctx.moveTo(leftX, midY - rPx);
+    ctx.lineTo(rightX, midY - rPx);
+    ctx.moveTo(leftX, midY + rPx);
+    ctx.lineTo(rightX, midY + rPx);
+    ctx.stroke();
+
+    // End caps
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.arc(leftX, midY, rPx, Math.PI/2, -Math.PI/2, true);
+    ctx.arc(rightX, midY, rPx, -Math.PI/2, Math.PI/2, true);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Particles
+    const n = 18;
+    const spacing = (rightX - leftX) / n;
+
+    ctx.fillStyle = "rgba(122,162,255,.9)";
+    for(let i=0;i<n;i++){
+      const x = leftX + ((i*spacing + (t*speed*2.2*dpr)) % (rightX-leftX));
+      // spread particles vertically inside vessel
+      const y = midY + Math.sin((i*1.7 + t*0.02)*2) * (rPx*0.55);
+      const rad = 2.4*dpr;
+      ctx.beginPath();
+      ctx.arc(x, y, rad, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // Labels
+    ctx.fillStyle = "rgba(199,207,252,.9)";
+    ctx.font = `${12*dpr}px system-ui`;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillText(`radius (r): ${fmt(rNow,2)} | relative flow (Q/Q₀): ${fmt(qNow/Q_BASE,2)}`, leftX, h*0.08);
+
+    // simple direction arrow
+    ctx.globalAlpha = 0.7;
+    ctx.strokeStyle = "rgba(255,255,255,.35)";
+    ctx.lineWidth = 2*dpr;
+    ctx.beginPath();
+    ctx.moveTo(w*0.42, h*0.86);
+    ctx.lineTo(w*0.62, h*0.86);
+    ctx.lineTo(w*0.59, h*0.83);
+    ctx.moveTo(w*0.62, h*0.86);
+    ctx.lineTo(w*0.59, h*0.89);
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+
+  function update(){
+    const dpNow = Number(dp.value);
+    const rNow  = Number(r.value);
+    const vNow  = Number(v.value);
+    const lNow  = Number(l.value);
+
+    dpVal.textContent = fmt(dpNow,0);
+    rVal.textContent  = fmt(rNow,2);
+    vVal.textContent  = fmt(vNow,2);
+    lVal.textContent  = fmt(lNow,2);
+
+    const qNow = calcQ(dpNow, rNow, vNow, lNow);
+    const rNowRes = calcR(rNow, vNow, lNow);
+
+    qOut.textContent = fmt(qNow,2);
+    rOut.textContent = fmt(rNowRes,4);
+
+    const qPc = percentChange(qNow, Q_BASE);
+    const rPc = percentChange(rNowRes, R_BASE);
+
+    qDelta.textContent = `${qPc>=0?"+":""}${fmt(qPc,1)}% vs baseline`;
+    rDelta.textContent = `${rPc>=0?"+":""}${fmt(rPc,1)}% vs baseline`;
+
+    // Pressure status
+    const ps = pressureStatus(rNow);
+    pDesc.textContent = ps.desc;
+    pBadge.textContent = ps.badge;
+
+    drawBar(dpNow, rNow, vNow, lNow);
+    drawVessel(rNow, qNow);
+  }
+
+  // Buttons (quick scenarios)
+  el("vasodilate").addEventListener("click", () => {
+    r.value = clamp(Number(r.value) * 1.20, Number(r.min), Number(r.max));
+    update();
+  });
+  el("vasoconstrict").addEventListener("click", () => {
+    r.value = clamp(Number(r.value) * 0.80, Number(r.min), Number(r.max));
+    update();
+  });
+  el("anemia").addEventListener("click", () => {
+    v.value = clamp(Number(v.value) * 0.80, Number(v.min), Number(v.max));
+    update();
+  });
+  el("poly").addEventListener("click", () => {
+    v.value = clamp(Number(v.value) * 1.35, Number(v.min), Number(v.max));
+    update();
+  });
+  el("angio").addEventListener("click", () => {
+    l.value = clamp(Number(l.value) * 1.35, Number(l.min), Number(l.max));
+    update();
+  });
+  el("reset").addEventListener("click", () => {
+    dp.value = BASE.dp;
+    r.value  = BASE.r;
+    v.value  = BASE.v;
+    l.value  = BASE.l;
+    update();
+  });
+
+  // Slider events
+  [dp,r,v,l].forEach(s => s.addEventListener("input", update));
+
+  // Animate
+  function tick(){
+    t++;
+    // keep drawings in sync with current values
+    const dpNow = Number(dp.value);
+    const rNow  = Number(r.value);
+    const vNow  = Number(v.value);
+    const lNow  = Number(l.value);
+    const qNow = calcQ(dpNow, rNow, vNow, lNow);
+    drawVessel(rNow, qNow);
+    requestAnimationFrame(tick);
+  }
+
+  window.addEventListener("resize", update);
+
+  // init
+  update();
+  requestAnimationFrame(tick);
+</script>
+</body>
+</html>
