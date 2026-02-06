@@ -3,24 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Hemodynamics Interactive: Poiseuille’s Law + Arterioles</title>
+  <title>Hemodynamics Interactive — Flow & Redistribution</title>
   <style>
     :root{
-      /* 🌿 Warm + professional theme */
-      --bg:#f8f4ef;        /* warm ivory */
-      --panel:#ffffff;     /* white card */
-      --panel2:#f3ede5;    /* warm light tan */
-      --text:#2b2b2b;      /* slate */
-      --muted:#5f5f5f;     /* muted slate */
+      --bg:#f8f4ef;
+      --panel:#ffffff;
+      --panel2:#f3ede5;
+      --text:#2b2b2b;
+      --muted:#5f5f5f;
       --border:rgba(0,0,0,.12);
 
       --accent:#8b2f2f;    /* burgundy */
       --accent2:#d4a017;   /* amber */
-      --good:#2f7d4a;
-      --warn:#b08900;
-      --bad:#b23a48;
 
       --shadow: 0 10px 26px rgba(0,0,0,.10);
+      --radius: 18px;
     }
 
     *{box-sizing:border-box}
@@ -33,381 +30,582 @@
         var(--bg);
       color:var(--text);
     }
+
     header{
-      padding:24px 18px 10px;
-      max-width:1100px;
+      max-width:1120px;
       margin:0 auto;
+      padding:22px 18px 10px;
+      display:flex;
+      justify-content:space-between;
+      gap:14px;
+      align-items:flex-end;
     }
-    h1{
-      font-size:22px;
-      margin:0 0 6px 0;
+    .titleBlock h1{
+      margin:0;
+      font-size:20px;
       letter-spacing:.2px;
-      color: var(--accent);
+      color:var(--accent);
+      line-height:1.2;
     }
-    .sub{
+    .titleBlock .sub{
+      margin-top:6px;
       color:var(--muted);
-      font-size:13px;
-      line-height:1.45;
+      font-size:12.5px;
+      line-height:1.35;
+      max-width:780px;
     }
 
     .wrap{
-      max-width:1100px;
+      max-width:1120px;
       margin:0 auto;
-      padding:14px 18px 40px;
+      padding:12px 18px 40px;
       display:grid;
       gap:14px;
-      grid-template-columns: 1.2fr .8fr;
+      grid-template-columns: 1fr;
+    }
+
+    .topBar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .tabs{
+      display:flex;
+      gap:8px;
+      background: rgba(255,255,255,.65);
+      border:1px solid var(--border);
+      border-radius:999px;
+      padding:6px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+    }
+    .tabBtn{
+      border:0;
+      cursor:pointer;
+      padding:8px 12px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
+      background:transparent;
+      transition: 150ms ease;
+      user-select:none;
+    }
+    .tabBtn[aria-selected="true"]{
+      background: var(--accent);
+      color:#fff;
+      box-shadow: 0 10px 20px rgba(139,47,47,.18);
+    }
+
+    .chipRow{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .chip{
+      font-size:11.5px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.7);
+      padding:6px 10px;
+      border-radius:999px;
+      color:var(--muted);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .dot{
+      width:8px; height:8px;
+      border-radius:999px;
+      background: rgba(139,47,47,.55);
+    }
+    .dot.alt{ background: rgba(212,160,23,.65); }
+
+    .grid{
+      display:grid;
+      gap:14px;
+      grid-template-columns: 1.05fr .95fr;
     }
     @media (max-width: 980px){
-      .wrap{grid-template-columns:1fr;}
+      .grid{ grid-template-columns: 1fr; }
     }
 
     .card{
       background: var(--panel);
       border:1px solid var(--border);
-      border-radius:16px;
+      border-radius: var(--radius);
       padding:14px;
       box-shadow: var(--shadow);
     }
-    .card h2{
-      margin:0 0 10px 0;
-      font-size:16px;
-      letter-spacing:.2px;
+
+    .sectionHead{
       display:flex;
       align-items:center;
-      gap:8px;
-      color: var(--accent);
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
     }
-    .pill{
+    .sectionHead h2{
+      margin:0;
+      font-size:14px;
+      color:var(--accent);
+      letter-spacing:.2px;
+      font-weight:800;
+    }
+    .miniPill{
       font-size:11px;
-      padding:3px 8px;
+      padding:4px 9px;
       border-radius:999px;
       border:1px solid var(--border);
       color:var(--muted);
       background: rgba(0,0,0,.04);
+      user-select:none;
+      white-space:nowrap;
     }
 
-    .grid2{
+    .controls{
       display:grid;
-      gap:12px;
-      grid-template-columns: 1fr 1fr;
+      gap:10px;
     }
-    @media (max-width: 680px){
-      .grid2{grid-template-columns:1fr;}
+    .control{
+      background: var(--panel2);
+      border:1px solid var(--border);
+      border-radius: 14px;
+      padding:10px;
     }
-
-    .row{
+    .controlTop{
       display:flex;
       justify-content:space-between;
       align-items:baseline;
       gap:10px;
-      margin: 8px 0 6px;
+      margin-bottom:6px;
     }
-    label{
-      font-size:13px;
+    .controlTop label{
+      font-size:12px;
       color:var(--muted);
     }
-    .val{
-      font-variant-numeric: tabular-nums;
-      font-size:13px;
+    .controlTop .val{
+      font-size:12px;
       color:var(--text);
-      opacity:.95;
+      font-variant-numeric: tabular-nums;
+      white-space:nowrap;
     }
-
     input[type="range"]{
       width:100%;
       accent-color: var(--accent);
     }
-    .hint{
-      font-size:12px;
-      color: rgba(95,95,95,.95);
-      line-height:1.35;
-      margin-top:6px;
+
+    .hctRow{
+      margin-top:8px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .tube{
+      flex:1;
+      height:14px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.12);
+      background: rgba(0,0,0,.06);
+      overflow:hidden;
+      position:relative;
+    }
+    .tube .fill{
+      height:100%;
+      width:45%;
+      background: rgba(139,47,47,.55);
+    }
+    .tube .plasma{
+      position:absolute;
+      right:0; top:0;
+      height:100%;
+      width:55%;
+      background: rgba(255,255,255,.35);
+    }
+    .miniBadge{
+      font-size:11.5px;
+      color:var(--muted);
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.55);
+      padding:4px 8px;
+      border-radius:999px;
+      font-weight:800;
+      white-space:nowrap;
     }
 
-    .math{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      font-size:12px;
-      background: var(--panel2);
-      border:1px solid var(--border);
-      padding:10px;
-      border-radius:12px;
-      line-height:1.45;
-      overflow:auto;
-      color: #2b2b2b;
-    }
-    .math b{color: var(--accent)}
-    .kpiGrid{
+    .kpis{
       display:grid;
       gap:10px;
       grid-template-columns: 1fr 1fr;
-      margin-top:10px;
+      margin-top:12px;
+    }
+    @media (max-width: 560px){
+      .kpis{ grid-template-columns: 1fr; }
     }
     .kpi{
       background: var(--panel2);
       border:1px solid var(--border);
-      border-radius:14px;
+      border-radius: 14px;
       padding:10px;
     }
     .kpi .t{
+      font-size:11.5px;
       color:var(--muted);
-      font-size:12px;
       margin-bottom:6px;
     }
     .kpi .n{
-      font-size:18px;
+      font-size:20px;
+      font-weight:900;
+      color:var(--accent);
       font-variant-numeric: tabular-nums;
       display:flex;
       align-items:baseline;
-      gap:8px;
-      color: var(--accent);
-      font-weight: 700;
+      gap:10px;
+      flex-wrap:wrap;
+      line-height:1.1;
     }
-    .delta{
-      font-size:12px;
-      padding:2px 8px;
-      border-radius:999px;
-      border:1px solid var(--border);
+    .mini{
+      font-size:11.5px;
       color:var(--muted);
+      border:1px solid var(--border);
       background: rgba(255,255,255,.55);
-      font-weight: 500;
+      padding:3px 8px;
+      border-radius:999px;
+      font-weight:800;
     }
 
-    .btnRow{
+    .quickRow{
       display:flex;
-      flex-wrap:wrap;
       gap:8px;
+      flex-wrap:wrap;
       margin-top:10px;
     }
     button{
+      border:1px solid rgba(0,0,0,.10);
       background: var(--accent);
-      color: #fff;
-      border: 1px solid rgba(0,0,0,.10);
+      color:#fff;
       padding:8px 10px;
       border-radius:12px;
       cursor:pointer;
       font-size:12px;
-      box-shadow: 0 6px 16px rgba(139,47,47,.14);
+      box-shadow: 0 8px 18px rgba(139,47,47,.14);
+      user-select:none;
     }
-    button:hover{filter:brightness(1.06)}
+    button:hover{ filter: brightness(1.05); }
     button.secondary{
-      background: #fff;
-      border: 1px solid rgba(139,47,47,.55);
-      color: var(--accent);
-      box-shadow: none;
+      background:#fff;
+      color:var(--accent);
+      border:1px solid rgba(139,47,47,.55);
+      box-shadow:none;
+    }
+    button.ghost{
+      background: rgba(255,255,255,.55);
+      color: var(--muted);
+      border:1px solid var(--border);
+      box-shadow:none;
     }
 
-    /* Visualization */
-    .viz{
+    .vizCard{
       display:grid;
       gap:12px;
-      grid-template-columns: 1fr;
     }
     .canvasWrap{
       background: var(--panel2);
       border:1px solid var(--border);
-      border-radius:16px;
+      border-radius: 16px;
       padding:10px;
+      overflow:hidden;
     }
-    canvas{width:100%; height:220px; display:block;}
+    canvas{
+      width:100%;
+      height:220px;
+      display:block;
+    }
+
+    .splitBars{
+      display:grid;
+      gap:10px;
+      margin-top:10px;
+    }
+    .barRow{
+      display:grid;
+      gap:8px;
+    }
+    .barTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      font-size:12px;
+      color:var(--muted);
+    }
+    .bar{
+      height:14px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.08);
+      background: rgba(0,0,0,.07);
+      overflow:hidden;
+      position:relative;
+    }
+    .fillCut{ height:100%; width:50%; background: rgba(139,47,47,.55); }
+    .fillVis{ height:100%; width:50%; background: rgba(212,160,23,.55); }
+
     .legend{
       display:flex;
+      gap:10px;
       flex-wrap:wrap;
-      gap:10px;
-      margin-top:8px;
+      margin-top:10px;
       color:var(--muted);
-      font-size:12px;
+      font-size:11.5px;
+      user-select:none;
     }
-    .dot{
-      display:inline-block;
-      width:10px;height:10px;border-radius:50%;
-      margin-right:6px; vertical-align:-1px;
-      background: var(--accent);
-    }
-
-    .callout{
-      border-left: 3px solid rgba(139,47,47,.65);
-      padding:10px 12px;
-      border-radius:12px;
-      background: rgba(139,47,47,.08);
-      color: #2b2b2b;
-      font-size:12.5px;
-      line-height:1.45;
-      margin-top:10px;
-    }
-
-    .small{
-      font-size:11px;
-      color: rgba(95,95,95,.9);
-      margin-top:8px;
-      line-height:1.35;
-    }
-
-    .status{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-top:10px;
-      padding:10px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background: var(--panel2);
-    }
-    .status .left{
-      display:flex; flex-direction:column; gap:3px;
-    }
-    .status .title{
-      font-size:12px; color:var(--muted);
-    }
-    .status .desc{
-      font-size:13px;
-      color: var(--text);
-    }
-    .badge{
-      font-size:11px;
-      padding:4px 10px;
+    .key{
+      display:flex; gap:8px; align-items:center;
+      padding:5px 9px;
       border-radius:999px;
       border:1px solid var(--border);
-      background: rgba(255,255,255,.55);
-      color: var(--muted);
-      white-space:nowrap;
-      font-weight: 600;
+      background: rgba(255,255,255,.6);
     }
+
+    .hidden{ display:none !important; }
   </style>
 </head>
+
 <body>
 <header>
-  <h1>Hemodynamics Interactive: Poiseuille’s Law (Modified) + Arteriolar Control</h1>
-  <div class="sub">
-    Students manipulate <b>ΔP</b>, <b>r</b>, <b>viscosity (V)</b>, and <b>length (L)</b> and immediately see how blood flow (<b>Q</b>) changes.
-    Built around <b>direct relationships</b> (ΔP, r⁴) and <b>indirect relationships</b> (V×L), plus the arterioles as key regulators.
+  <div class="titleBlock">
+    <h1>Hemodynamics Interactive</h1>
+    <div class="sub">
+      Explore how changes in key variables alter blood flow in a vessel, and how arteriolar radius can redistribute flow across the body.
+    </div>
+  </div>
+
+  <div class="chipRow" aria-label="status chips">
+    <div class="chip"><span class="dot"></span><span id="chipMode">Single Vessel</span></div>
+    <div class="chip"><span class="dot alt"></span><span>Live</span></div>
   </div>
 </header>
 
 <div class="wrap">
-  <!-- LEFT: Controls + math -->
-  <section class="card">
-    <h2>Adjust the variables <span class="pill">Poiseuille + Hemodynamics</span></h2>
+  <div class="topBar">
+    <div class="tabs" role="tablist" aria-label="Modes">
+      <button class="tabBtn" id="tabSingle" role="tab" aria-selected="true" aria-controls="panelSingle">Single Vessel</button>
+      <button class="tabBtn" id="tabSystem" role="tab" aria-selected="false" aria-controls="panelSystem">Systemic Redistribution</button>
+    </div>
 
-    <div class="grid2">
-      <div>
-        <div class="row">
-          <label for="dp">ΔP (Pressure Gradient)</label>
-          <div class="val"><span id="dpVal"></span> mmHg</div>
+    <div class="chipRow">
+      <div class="chip"><span class="dot"></span><span id="liveQ">Q: —</span></div>
+      <div class="chip"><span class="dot alt"></span><span id="liveR">R: —</span></div>
+    </div>
+  </div>
+
+  <!-- ===================== SINGLE VESSEL ===================== -->
+  <section id="panelSingle" role="tabpanel" aria-labelledby="tabSingle">
+    <div class="grid">
+      <div class="card">
+        <div class="sectionHead">
+          <h2>Controls</h2>
+          <span class="miniPill">Q = (ΔP · r⁴) / (μ · L)</span>
         </div>
-        <input id="dp" type="range" min="10" max="120" step="1" value="60"/>
-        <div class="hint">Direct relationship to Q: ↑ΔP → ↑Q (all else equal).</div>
-      </div>
 
-      <div>
-        <div class="row">
-          <label for="r">r (Arteriole Radius)</label>
-          <div class="val"><span id="rVal"></span> (relative)</div>
+        <div class="controls">
+          <div class="control">
+            <div class="controlTop">
+              <label for="dp">ΔP</label>
+              <div class="val"><span id="dpVal"></span> mmHg</div>
+            </div>
+            <input id="dp" type="range" min="10" max="120" step="1" value="60"/>
+          </div>
+
+          <div class="control">
+            <div class="controlTop">
+              <label for="r">Radius (r)</label>
+              <div class="val"><span id="rVal"></span> ×</div>
+            </div>
+            <!-- default set mid-ish -->
+            <input id="r" type="range" min="0.8" max="3.0" step="0.05" value="1.90"/>
+          </div>
+
+          <div class="control">
+            <div class="controlTop">
+              <label for="hct">Hematocrit (Hct)</label>
+              <div class="val"><span id="hctVal"></span>%</div>
+            </div>
+            <input id="hct" type="range" min="25" max="65" step="1" value="45"/>
+            <div class="hctRow" aria-label="hematocrit visualization">
+              <div class="tube" title="Hematocrit tube (conceptual)">
+                <div class="fill" id="hctFill"></div>
+                <div class="plasma" id="plasmaFill"></div>
+              </div>
+              <div class="miniBadge" id="muBadge">μ: 1.00×</div>
+            </div>
+          </div>
+
+          <div class="control">
+            <div class="controlTop">
+              <label for="len">Length (L)</label>
+              <div class="val"><span id="lVal"></span> ×</div>
+            </div>
+            <input id="len" type="range" min="0.7" max="3.0" step="0.05" value="1.0"/>
+          </div>
         </div>
-        <input id="r" type="range" min="0.8" max="3.0" step="0.05" value="1.5"/>
-        <div class="hint"><b>Radius is raised to the 4th power</b>: small changes in r cause huge changes in Q.</div>
-      </div>
 
-      <div>
-        <div class="row">
-          <label for="visc">V (Blood Viscosity)</label>
-          <div class="val"><span id="vVal"></span> (relative)</div>
+        <div class="kpis">
+          <div class="kpi">
+            <div class="t">Flow (Q)</div>
+            <div class="n">
+              <span id="qOut">—</span>
+              <span class="mini" id="qRel">—</span>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="t">Resistance (R)</div>
+            <div class="n">
+              <span id="rOut">—</span>
+              <span class="mini" id="rRel">—</span>
+            </div>
+          </div>
         </div>
-        <input id="visc" type="range" min="0.7" max="3.0" step="0.05" value="1.0"/>
-        <div class="hint">Indirect relationship to Q: ↑viscosity → ↓Q.</div>
-      </div>
 
-      <div>
-        <div class="row">
-          <label for="len">L (Vessel Length)</label>
-          <div class="val"><span id="lVal"></span> (relative)</div>
+        <div class="quickRow">
+          <button id="vasodilate">+ r</button>
+          <button id="vasoconstrict">− r</button>
+          <button class="ghost" id="anemia">↓ Hct</button>
+          <button class="ghost" id="poly">↑ Hct</button>
+          <button class="secondary" id="resetSingle">Reset</button>
         </div>
-        <input id="len" type="range" min="0.7" max="3.0" step="0.05" value="1.0"/>
-        <div class="hint">Indirect relationship to Q: ↑length → ↓Q.</div>
       </div>
-    </div>
 
-    <div class="math" aria-label="equations">
-      <div><b>Modified Poiseuille’s Law:</b></div>
-      <div>Q = (ΔP · r<sup>4</sup>) / (V · L)</div>
-      <div style="margin-top:8px;"><b>Resistance form:</b></div>
-      <div>R = (V · L) / r<sup>4</sup></div>
-      <div>So: Q = ΔP / R</div>
-    </div>
+      <aside class="card vizCard">
+        <div class="sectionHead">
+          <h2>Vessel visualization</h2>
+          <span class="miniPill">radius + relative speed</span>
+        </div>
 
-    <div class="kpiGrid">
-      <div class="kpi">
-        <div class="t">Flow (Q)</div>
-        <div class="n"><span id="qOut"></span> <span class="delta" id="qDelta"></span></div>
-      </div>
-      <div class="kpi">
-        <div class="t">Resistance (R)</div>
-        <div class="n"><span id="rOut"></span> <span class="delta" id="rDelta"></span></div>
-      </div>
-    </div>
-
-    <div class="callout">
-      <b>Arteriolar regulation concept:</b><br/>
-      Click “Vasodilate” or “Vasoconstrict” to change radius quickly and observe how dramatic the r⁴ effect is.
-      The “Pressure status” indicator is intentionally simplified for teaching (qualitative cue).
-    </div>
-
-    <div class="btnRow">
-      <button id="vasodilate">Vasodilate (+20% r)</button>
-      <button id="vasoconstrict">Vasoconstrict (−20% r)</button>
-      <button id="anemia">Anemia (↓ V)</button>
-      <button id="poly">Polycythemia (↑ V)</button>
-      <button id="angio">Angiogenesis (↑ L)</button>
-      <button class="secondary" id="reset">Reset to Baseline</button>
-    </div>
-
-    <div class="status" id="pressureStatus">
-      <div class="left">
-        <div class="title">Qualitative “pressure status”</div>
-        <div class="desc" id="pDesc">—</div>
-      </div>
-      <div class="badge" id="pBadge">—</div>
-    </div>
-
-    <div class="small">
-      Instructor note: r, V, and L are shown in “relative units” to emphasize relationships (ΔP·r⁴ increases Q; V·L decreases Q).
+        <div class="canvasWrap">
+          <canvas id="vessel"></canvas>
+        </div>
+      </aside>
     </div>
   </section>
 
-  <!-- RIGHT: Visualization -->
-  <aside class="card viz">
-    <h2>Visualize what changed <span class="pill">Direct vs Indirect</span></h2>
+  <!-- ===================== SYSTEMIC REDISTRIBUTION ===================== -->
+  <section id="panelSystem" class="hidden" role="tabpanel" aria-labelledby="tabSystem">
+    <div class="grid">
+      <div class="card">
+        <div class="sectionHead">
+          <h2>Controls</h2>
+          <!-- keep MAP and show branch ΔP values in KPIs -->
+          <span class="miniPill">MAP + two beds</span>
+        </div>
 
-    <div class="canvasWrap">
-      <canvas id="bar"></canvas>
-      <div class="legend">
-        <span><span class="dot"></span>Relative effect size (normalized)</span>
-      </div>
-      <div class="hint">
-        Bars show how each term is contributing <i>right now</i>:
-        the numerator (ΔP and r⁴) pushes flow up; the denominator (V and L) pushes flow down.
-      </div>
-    </div>
+        <div class="controls">
+          <div class="control">
+            <div class="controlTop">
+              <label for="map">MAP</label>
+              <div class="val"><span id="mapVal"></span> mmHg</div>
+            </div>
+            <input id="map" type="range" min="50" max="140" step="1" value="90"/>
+          </div>
 
-    <div class="canvasWrap">
-      <canvas id="vessel"></canvas>
-      <div class="hint">
-        Vessel radius is drawn to scale (relative). Particle speed represents relative Q.
-        This is a teaching visualization, not a clinical simulation.
-      </div>
-    </div>
+          <div class="control">
+            <div class="controlTop">
+              <label for="sysHct">Hematocrit (Hct)</label>
+              <div class="val"><span id="sysHctVal"></span>%</div>
+            </div>
+            <input id="sysHct" type="range" min="25" max="65" step="1" value="45"/>
+            <div class="hctRow" aria-label="system hematocrit visualization">
+              <div class="tube" title="Hematocrit tube (conceptual)">
+                <div class="fill" id="sysHctFill"></div>
+                <div class="plasma" id="sysPlasmaFill"></div>
+              </div>
+              <div class="miniBadge" id="sysMuBadge">μ: 1.00×</div>
+            </div>
+          </div>
 
-    <div class="card" style="padding:12px; border-radius:16px; box-shadow:none; border:1px solid var(--border); background:var(--panel2);">
-      <h2 style="margin:0 0 8px 0; font-size:14px;">Discussion prompts (quick)</h2>
-      <ul style="margin:0; padding-left:18px; color:var(--muted); font-size:12.5px; line-height:1.5;">
-        <li>Hold ΔP constant. How much does Q change if r increases by just 10%? Why?</li>
-        <li>Compare anemia vs polycythemia. What happens to Q, and what tradeoffs might exist?</li>
-        <li>If angiogenesis increases vessel length, why might flow decrease locally—but still help tissue oxygenation overall?</li>
-        <li>Which variable is most likely to be adjusted rapidly moment-to-moment: ΔP, r, V, or L?</li>
-      </ul>
+          <div class="control">
+            <div class="controlTop">
+              <label for="rCut">Cutaneous radius (r)</label>
+              <div class="val"><span id="rCutVal"></span> ×</div>
+            </div>
+            <!-- default set mid-ish -->
+            <input id="rCut" type="range" min="0.8" max="3.0" step="0.05" value="1.90"/>
+          </div>
+
+          <div class="control">
+            <div class="controlTop">
+              <label for="rVis">Visceral radius (r)</label>
+              <div class="val"><span id="rVisVal"></span> ×</div>
+            </div>
+            <!-- default set mid-ish -->
+            <input id="rVis" type="range" min="0.8" max="3.0" step="0.05" value="1.90"/>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="t">Total Flow (Qtotal)</div>
+            <div class="n">
+              <span id="qTotOut">—</span>
+              <span class="mini" id="qTotRel">—</span>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="t">Branch ΔP</div>
+            <div class="n" style="font-size:16px">
+              <span class="mini" id="dpCutBadge">Cut ΔP: —</span>
+              <span class="mini" id="dpVisBadge">Vis ΔP: —</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="splitBars" aria-label="flow split">
+          <div class="barRow">
+            <div class="barTop">
+              <span>Cutaneous share</span>
+              <span id="shareCut">—</span>
+            </div>
+            <div class="bar"><div class="fillCut" id="fillCut"></div></div>
+          </div>
+
+          <div class="barRow">
+            <div class="barTop">
+              <span>Visceral share</span>
+              <span id="shareVis">—</span>
+            </div>
+            <div class="bar"><div class="fillVis" id="fillVis"></div></div>
+          </div>
+
+          <div class="legend">
+            <div class="key"><span class="dot"></span> Cutaneous</div>
+            <div class="key"><span class="dot alt"></span> Visceral</div>
+          </div>
+        </div>
+
+        <div class="quickRow">
+          <button id="cutDilate">Cut + r</button>
+          <button id="cutConstrict">Cut − r</button>
+          <button id="visDilate">Vis + r</button>
+          <button id="visConstrict">Vis − r</button>
+          <button class="secondary" id="resetSystem">Reset</button>
+        </div>
+      </div>
+
+      <aside class="card vizCard">
+        <div class="sectionHead">
+          <h2>Redistribution visualization</h2>
+          <span class="miniPill">zoomed junction</span>
+        </div>
+
+        <div class="canvasWrap">
+          <canvas id="system"></canvas>
+        </div>
+      </aside>
     </div>
-  </aside>
+  </section>
 </div>
 
 <script>
@@ -416,23 +614,106 @@
   const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
   const fmt = (x, d=2) => Number(x).toFixed(d);
 
-  // Baseline settings (teaching baseline)
-  const BASE = { dp: 60, r: 1.50, v: 1.00, l: 1.00 };
+  // ---------- Hematocrit -> viscosity ----------
+  const BASE_HCT = 0.45; // baseline fraction (45%)
+  function hctToMuRel(hctFrac){
+    const num = (1 - hctFrac);
+    const den = (1 - BASE_HCT);
+    return Math.pow(num / den, -2);
+  }
 
-  // DOM
-  const dp = el("dp"), r = el("r"), v = el("visc"), l = el("len");
-  const dpVal = el("dpVal"), rVal = el("rVal"), vVal = el("vVal"), lVal = el("lVal");
-  const qOut = el("qOut"), rOut = el("rOut"), qDelta = el("qDelta"), rDelta = el("rDelta");
+  // Optional subtle small-vessel apparent viscosity correction (kept gentle)
+  function apparentMu(muRel, rNow){
+    const corr = 1 - 0.12 * clamp((1.2 - rNow), 0, 1); // up to -12%
+    return muRel * corr;
+  }
 
-  const pDesc = el("pDesc"), pBadge = el("pBadge");
+  // ---------- Single vessel model ----------
+  const BASE1 = { dp: 60, r: 1.90, hct: 45, l: 1.00 };
+  const calcQ = (dp, r, mu, l) => (dp * Math.pow(r,4)) / (mu * l);
+  const calcR = (r, mu, l) => (mu * l) / Math.pow(r,4);
 
-  // Canvases
-  const bar = el("bar");
+  const MU1_BASE = apparentMu(hctToMuRel(BASE1.hct/100), BASE1.r);
+  const Q1_BASE  = calcQ(BASE1.dp, BASE1.r, MU1_BASE, BASE1.l);
+  const R1_BASE  = calcR(BASE1.r, MU1_BASE, BASE1.l);
+
+  // ---------- Systemic redistribution model (two beds) ----------
+  // We keep MAP, but we ALSO compute an "effective branch ΔP" that varies with radius.
+  // This is a conceptual "Boyle-like" coupling the student can notice: changing r changes ΔP shown in the branch.
+  const BASE2 = { map: 90, hct: 45, rCut: 1.90, rVis: 1.90 };
+
+  // A smooth bounded mapping from radius -> effective ΔP fraction of MAP.
+  // Larger r -> higher effective perfusion pressure; smaller r -> lower.
+  function dpFactorFromRadius(rNow, rMin=0.8, rMax=3.0){
+    const mid = (rMin + rMax) / 2; // ~1.9
+    const x = (rNow - mid) / (rMax - rMin); // ~[-0.5, 0.5]
+    const f = 0.78 + 0.40 * x;              // bounded-ish
+    return clamp(f, 0.55, 1.05);
+  }
+
+  // Bed resistance ~ μ / r^4 (conceptual; length folded into constant)
+  const bedR = (mu, r) => mu / Math.pow(r,4);
+
+  // Baseline totals for relative displays
+  const MU2_BASE = hctToMuRel(BASE2.hct/100);
+  const DP_CUT_BASE = BASE2.map * dpFactorFromRadius(BASE2.rCut);
+  const DP_VIS_BASE = BASE2.map * dpFactorFromRadius(BASE2.rVis);
+
+  const R_CUT_BASE = bedR(MU2_BASE, BASE2.rCut);
+  const R_VIS_BASE = bedR(MU2_BASE, BASE2.rVis);
+
+  const Q_CUT_BASE = calcQ(DP_CUT_BASE, BASE2.rCut, MU2_BASE, 1.0);
+  const Q_VIS_BASE = calcQ(DP_VIS_BASE, BASE2.rVis, MU2_BASE, 1.0);
+  const QT_BASE = Q_CUT_BASE + Q_VIS_BASE;
+
+  // ---------- Tabs ----------
+  const tabSingle = el("tabSingle");
+  const tabSystem = el("tabSystem");
+  const panelSingle = el("panelSingle");
+  const panelSystem = el("panelSystem");
+  const chipMode = el("chipMode");
+
+  function setTab(which){
+    const single = which === "single";
+    tabSingle.setAttribute("aria-selected", String(single));
+    tabSystem.setAttribute("aria-selected", String(!single));
+    panelSingle.classList.toggle("hidden", !single);
+    panelSystem.classList.toggle("hidden", single);
+    chipMode.textContent = single ? "Single Vessel" : "Systemic Redistribution";
+    updateLiveChips();
+    requestAnimationFrame(() => { updateSingle(); updateSystem(); });
+  }
+  tabSingle.addEventListener("click", () => setTab("single"));
+  tabSystem.addEventListener("click", () => setTab("system"));
+
+  // ---------- Single DOM ----------
+  const dp = el("dp"), r = el("r"), hct = el("hct"), len = el("len");
+  const dpVal = el("dpVal"), rVal = el("rVal"), hctVal = el("hctVal"), lVal = el("lVal");
+  const hctFill = el("hctFill"), plasmaFill = el("plasmaFill"), muBadge = el("muBadge");
+  const qOut = el("qOut"), rOut = el("rOut"), qRel = el("qRel"), rRel = el("rRel");
+
+  // Single canvas
   const vessel = el("vessel");
-  const barCtx = bar.getContext("2d");
-  const vesselCtx = vessel.getContext("2d");
+  const vctx = vessel.getContext("2d");
 
-  // Resize canvases to device pixels for crispness
+  // ---------- System DOM ----------
+  const map = el("map"), sysHct = el("sysHct"), rCut = el("rCut"), rVis = el("rVis");
+  const mapVal = el("mapVal"), sysHctVal = el("sysHctVal"), rCutVal = el("rCutVal"), rVisVal = el("rVisVal");
+  const sysHctFill = el("sysHctFill"), sysPlasmaFill = el("sysPlasmaFill"), sysMuBadge = el("sysMuBadge");
+
+  const qTotOut = el("qTotOut"), qTotRel = el("qTotRel");
+  const dpCutBadge = el("dpCutBadge"), dpVisBadge = el("dpVisBadge");
+  const shareCut = el("shareCut"), shareVis = el("shareVis");
+  const fillCut = el("fillCut"), fillVis = el("fillVis");
+
+  // System canvas
+  const system = el("system");
+  const sctx = system.getContext("2d");
+
+  // KPI chips in header
+  const liveQ = el("liveQ");
+  const liveR = el("liveR");
+
   function fitCanvas(c){
     const rect = c.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
@@ -441,242 +722,388 @@
     return dpr;
   }
 
-  // Physics (teaching model)
-  function calcQ(dp, r, v, l){
-    return (dp * Math.pow(r,4)) / (v * l);
-  }
-  function calcR(r, v, l){
-    return (v * l) / Math.pow(r,4);
-  }
-
-  const Q_BASE = calcQ(BASE.dp, BASE.r, BASE.v, BASE.l);
-  const R_BASE = calcR(BASE.r, BASE.v, BASE.l);
-
-  function percentChange(x, base){
-    return ((x - base) / base) * 100;
-  }
-
-  // Qualitative pressure indicator (simplified teaching cue)
-  function pressureStatus(rNow){
-    const ratio = rNow / BASE.r;
-    if (ratio >= 1.15) return { desc: "Vasodilation tendency → lower local pressure", badge: "Lower pressure (qualitative)" };
-    if (ratio <= 0.85) return { desc: "Vasoconstriction tendency → higher local pressure", badge: "Higher pressure (qualitative)" };
-    return { desc: "Near baseline tone", badge: "Baseline-ish" };
-  }
-
-  // Bar chart: show relative term magnitudes normalized
-  function drawBar(dpNow, rNow, vNow, lNow){
-    const dpr = fitCanvas(bar);
-    const ctx = barCtx;
-    const w = bar.width, h = bar.height;
-
-    ctx.clearRect(0,0,w,h);
-
-    const up1 = dpNow;
-    const up2 = Math.pow(rNow,4);
-    const down1 = vNow;
-    const down2 = lNow;
-
-    const arr = [up1, up2, down1, down2];
-    const maxV = Math.max(...arr);
-
-    const labels = ["ΔP (up)", "r⁴ (up)", "V (down)", "L (down)"];
-
-    const pad = 22 * dpr;
-    const barW = (w - pad*2) / labels.length;
-    const baseY = h - pad;
-    const topY = pad;
-
-    // Axis
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = "rgba(0,0,0,.22)";
-    ctx.lineWidth = 1.2 * dpr;
-    ctx.beginPath();
-    ctx.moveTo(pad, baseY);
-    ctx.lineTo(w-pad, baseY);
-    ctx.stroke();
-
-    // Bars + labels
-    ctx.font = `${12*dpr}px system-ui`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-
-    for(let i=0;i<labels.length;i++){
-      const v = arr[i];
-      const norm = v / maxV;
-      const bh = (baseY - topY) * norm * 0.92;
-      const x0 = pad + i*barW + barW*0.14;
-      const bw = barW*0.72;
-      const y0 = baseY - bh;
-
-      // Bar fill
-      ctx.fillStyle = "rgba(139,47,47,.55)";
-      ctx.fillRect(x0, y0, bw, bh);
-
-      // Label
-      ctx.fillStyle = "rgba(95,95,95,.95)";
-      ctx.fillText(labels[i], x0 + bw/2, baseY + 6*dpr);
-
-      // Value
-      ctx.fillStyle = "rgba(43,43,43,.95)";
-      ctx.font = `${11*dpr}px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace`;
-      ctx.fillText(fmt(v, (i===0)?0:2), x0 + bw/2, y0 - 14*dpr);
-      ctx.font = `${12*dpr}px system-ui`;
-    }
-  }
-
-  // Vessel animation
+  // ---------- Single rendering ----------
   let t = 0;
-  function drawVessel(rNow, qNow){
+  function drawVessel(rNow, qRatio){
     const dpr = fitCanvas(vessel);
-    const ctx = vesselCtx;
     const w = vessel.width, h = vessel.height;
 
-    ctx.clearRect(0,0,w,h);
+    vctx.clearRect(0,0,w,h);
 
-    const midY = h * 0.52;
+    const midY = h * 0.55;
     const leftX = w * 0.10;
     const rightX = w * 0.90;
 
-    // Radius to pixels
-    const rPx = (rNow / 3.0) * (h * 0.22) + (h*0.05);
+    const rPx = (rNow / 3.0) * (h * 0.22) + (h * 0.06);
+    const speed = clamp(qRatio, 0.15, 4.2);
 
-    // Speed normalized
-    const speed = clamp(qNow / Q_BASE, 0.2, 4.0);
+    vctx.strokeStyle = "rgba(0,0,0,.22)";
+    vctx.lineWidth = Math.max(2*dpr, (rPx*2) * 0.06);
+    vctx.beginPath();
+    vctx.moveTo(leftX, midY - rPx); vctx.lineTo(rightX, midY - rPx);
+    vctx.moveTo(leftX, midY + rPx); vctx.lineTo(rightX, midY + rPx);
+    vctx.stroke();
 
-    // Vessel walls
-    ctx.strokeStyle = "rgba(0,0,0,.24)";
-    ctx.lineWidth = (rPx*2) * 0.06;
-    ctx.beginPath();
-    ctx.moveTo(leftX, midY - rPx);
-    ctx.lineTo(rightX, midY - rPx);
-    ctx.moveTo(leftX, midY + rPx);
-    ctx.lineTo(rightX, midY + rPx);
-    ctx.stroke();
+    const n = 20;
+    const span = (rightX - leftX);
+    const spacing = span / n;
+    vctx.fillStyle = "rgba(139,47,47,.85)";
 
-    // End caps
-    ctx.globalAlpha = 0.55;
-    ctx.beginPath();
-    ctx.arc(leftX, midY, rPx, Math.PI/2, -Math.PI/2, true);
-    ctx.arc(rightX, midY, rPx, -Math.PI/2, Math.PI/2, true);
-    ctx.closePath();
-    ctx.stroke();
-    ctx.globalAlpha = 1;
-
-    // Particles
-    const n = 18;
-    const spacing = (rightX - leftX) / n;
-
-    ctx.fillStyle = "rgba(139,47,47,.85)";
     for(let i=0;i<n;i++){
-      const x = leftX + ((i*spacing + (t*speed*2.2*dpr)) % (rightX-leftX));
-      const y = midY + Math.sin((i*1.7 + t*0.02)*2) * (rPx*0.55);
-      const rad = 2.4*dpr;
+      const x = leftX + ((i*spacing + (t*speed*2.3*dpr)) % span);
+      const y = midY + Math.sin((i*1.6 + t*0.02)*2) * (rPx*0.55);
+      const rad = 2.3*dpr;
+      vctx.beginPath();
+      vctx.arc(x, y, rad, 0, Math.PI*2);
+      vctx.fill();
+    }
+
+    vctx.fillStyle = "rgba(95,95,95,.95)";
+    vctx.font = `${12*dpr}px system-ui`;
+    vctx.textAlign = "left";
+    vctx.textBaseline = "top";
+    vctx.fillText(`r ${fmt(rNow,2)}×   Q ${fmt(qRatio,2)}×`, leftX, h*0.07);
+
+    vctx.globalAlpha = 0.65;
+    vctx.strokeStyle = "rgba(0,0,0,.26)";
+    vctx.lineWidth = 2*dpr;
+    vctx.beginPath();
+    vctx.moveTo(w*0.44, h*0.88);
+    vctx.lineTo(w*0.64, h*0.88);
+    vctx.lineTo(w*0.61, h*0.85);
+    vctx.moveTo(w*0.64, h*0.88);
+    vctx.lineTo(w*0.61, h*0.91);
+    vctx.stroke();
+    vctx.globalAlpha = 1;
+  }
+
+  function updateSingle(){
+    const dpNow = Number(dp.value);
+    const rNow  = Number(r.value);
+    const hctPct = Number(hct.value);
+    const lNow  = Number(len.value);
+
+    const muRel = hctToMuRel(hctPct/100);
+    const muEff = apparentMu(muRel, rNow);
+
+    dpVal.textContent = fmt(dpNow,0);
+    rVal.textContent  = fmt(rNow,2);
+    hctVal.textContent = fmt(hctPct,0);
+    lVal.textContent  = fmt(lNow,2);
+
+    hctFill.style.width = `${hctPct}%`;
+    plasmaFill.style.width = `${100 - hctPct}%`;
+    muBadge.textContent = `μ: ${fmt(muEff,2)}×`;
+
+    const qNow = calcQ(dpNow, rNow, muEff, lNow);
+    const rNowRes = calcR(rNow, muEff, lNow);
+
+    const qRatio = qNow / Q1_BASE;
+    const rRatio = rNowRes / R1_BASE;
+
+    qOut.textContent = fmt(qNow,2);
+    rOut.textContent = fmt(rNowRes,4);
+    qRel.textContent = `${fmt(qRatio,2)}×`;
+    rRel.textContent = `${fmt(rRatio,2)}×`;
+
+    drawVessel(rNow, qRatio);
+    updateLiveChips();
+  }
+
+  // ---------- System rendering: zoomed junction w/ vessel-style walls + particles ----------
+  const lerp = (a,b,t) => a + (b-a)*t;
+
+  function drawTube(ctx, a, b, radiusPx, stroke){
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const L = Math.max(1e-6, Math.hypot(dx,dy));
+    const nx = -dy / L;
+    const ny =  dx / L;
+
+    ctx.strokeStyle = stroke;
+    ctx.lineWidth = Math.max(1, radiusPx * 0.18);
+    ctx.lineCap = "round";
+
+    ctx.beginPath();
+    ctx.moveTo(a.x + nx*radiusPx, a.y + ny*radiusPx);
+    ctx.lineTo(b.x + nx*radiusPx, b.y + ny*radiusPx);
+    ctx.moveTo(a.x - nx*radiusPx, a.y - ny*radiusPx);
+    ctx.lineTo(b.x - nx*radiusPx, b.y - ny*radiusPx);
+    ctx.stroke();
+  }
+
+  function pointOnSegment(a,b,u){
+    return { x: lerp(a.x,b.x,u), y: lerp(a.y,b.y,u) };
+  }
+
+  function drawParticlesOnSegment(ctx, a, b, radiusPx, nDots, speed, color, phase){
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const segLen = Math.max(1e-6, Math.hypot(dx,dy));
+    const ux = dx / segLen;
+    const uy = dy / segLen;
+    const nx = -uy, ny = ux;
+
+    const amp = radiusPx * 0.55;
+    const rad = Math.max(1.8, radiusPx * 0.10);
+
+    ctx.fillStyle = color;
+
+    for (let i=0;i<nDots;i++){
+      const u = ((i / nDots) + phase + (t * speed * 0.003)) % 1;
+      const p = pointOnSegment(a,b,u);
+
+      const wob = Math.sin((i*1.7 + t*0.02) * 2) * amp;
+      const x = p.x + nx * wob;
+      const y = p.y + ny * wob;
+
       ctx.beginPath();
       ctx.arc(x, y, rad, 0, Math.PI*2);
       ctx.fill();
     }
-
-    // Labels
-    ctx.fillStyle = "rgba(95,95,95,.98)";
-    ctx.font = `${12*dpr}px system-ui`;
-    ctx.textAlign = "left";
-    ctx.textBaseline = "top";
-    ctx.fillText(`radius (r): ${fmt(rNow,2)} | relative flow (Q/Q₀): ${fmt(qNow/Q_BASE,2)}`, leftX, h*0.08);
-
-    // Direction arrow
-    ctx.globalAlpha = 0.7;
-    ctx.strokeStyle = "rgba(0,0,0,.28)";
-    ctx.lineWidth = 2*dpr;
-    ctx.beginPath();
-    ctx.moveTo(w*0.42, h*0.86);
-    ctx.lineTo(w*0.62, h*0.86);
-    ctx.lineTo(w*0.59, h*0.83);
-    ctx.moveTo(w*0.62, h*0.86);
-    ctx.lineTo(w*0.59, h*0.89);
-    ctx.stroke();
-    ctx.globalAlpha = 1;
   }
 
-  function update(){
-    const dpNow = Number(dp.value);
-    const rNow  = Number(r.value);
-    const vNow  = Number(v.value);
-    const lNow  = Number(l.value);
+  function drawJunction2(fracCut, fracVis, qTotalRatio, dpCut, dpVis){
+    const dpr = fitCanvas(system);
+    const w = system.width, h = system.height;
+    sctx.clearRect(0,0,w,h);
 
-    dpVal.textContent = fmt(dpNow,0);
-    rVal.textContent  = fmt(rNow,2);
-    vVal.textContent  = fmt(vNow,2);
-    lVal.textContent  = fmt(lNow,2);
+    // zoomed junction view
+    const J = { x: w*0.50, y: h*0.46 };
+    const trunkTop = { x: w*0.50, y: h*0.12 };
+    const CutEnd = { x: w*0.20, y: h*0.82 };
+    const VisEnd = { x: w*0.80, y: h*0.82 };
 
-    const qNow = calcQ(dpNow, rNow, vNow, lNow);
-    const rNowRes = calcR(rNow, vNow, lNow);
+    // thickness based on shares (bounded)
+    const base = h * 0.060;
+    const rTrunk = clamp(base * (0.80 + qTotalRatio*0.20), base*0.65, base*1.15);
+    const rCutPx = clamp(base * (0.45 + fracCut*1.35), base*0.35, base*1.80);
+    const rVisPx = clamp(base * (0.45 + fracVis*1.35), base*0.35, base*1.80);
 
-    qOut.textContent = fmt(qNow,2);
-    rOut.textContent = fmt(rNowRes,4);
+    // walls (neutral)
+    drawTube(sctx, trunkTop, J, rTrunk, "rgba(0,0,0,.22)");
+    drawTube(sctx, J, CutEnd, rCutPx, "rgba(0,0,0,.20)");
+    drawTube(sctx, J, VisEnd, rVisPx, "rgba(0,0,0,.20)");
 
-    const qPc = percentChange(qNow, Q_BASE);
-    const rPc = percentChange(rNowRes, R_BASE);
+    // particles
+    const trunkSpeed = clamp(qTotalRatio, 0.25, 3.0);
+    const cutSpeed = clamp(trunkSpeed * (0.65 + fracCut*1.1), 0.25, 3.2);
+    const visSpeed = clamp(trunkSpeed * (0.65 + fracVis*1.1), 0.25, 3.2);
 
-    qDelta.textContent = `${qPc>=0?"+":""}${fmt(qPc,1)}% vs baseline`;
-    rDelta.textContent = `${rPc>=0?"+":""}${fmt(rPc,1)}% vs baseline`;
+    const baseDots = Math.round(14 + 10*clamp(qTotalRatio,0,2));
+    const nT = Math.max(10, Math.round(baseDots * 1.1));
+    const nC = Math.max(8, Math.round(baseDots * (0.6 + fracCut)));
+    const nV = Math.max(8, Math.round(baseDots * (0.6 + fracVis)));
 
-    const ps = pressureStatus(rNow);
-    pDesc.textContent = ps.desc;
-    pBadge.textContent = ps.badge;
+    drawParticlesOnSegment(sctx, trunkTop, J, rTrunk, nT, trunkSpeed, "rgba(0,0,0,.14)", 0.05);
+    drawParticlesOnSegment(sctx, J, CutEnd, rCutPx, nC, cutSpeed, "rgba(139,47,47,.82)", 0.18);
+    drawParticlesOnSegment(sctx, J, VisEnd, rVisPx, nV, visSpeed, "rgba(212,160,23,.82)", 0.42);
 
-    drawBar(dpNow, rNow, vNow, lNow);
-    drawVessel(rNow, qNow);
+    // labels (minimal but include ΔP cues)
+    sctx.fillStyle = "rgba(95,95,95,.95)";
+    sctx.font = `${12*dpr}px system-ui`;
+
+    sctx.textAlign = "center";
+    sctx.textBaseline = "bottom";
+    sctx.fillText("MAP", trunkTop.x, trunkTop.y - 6*dpr);
+
+    sctx.textBaseline = "middle";
+    sctx.textAlign = "left";
+    sctx.fillText(`Cutaneous  ${Math.round(fracCut*100)}%`, CutEnd.x + 10*dpr, CutEnd.y);
+    sctx.textBaseline = "top";
+    sctx.fillText(`ΔP ${Math.round(dpCut)} mmHg`, CutEnd.x + 10*dpr, CutEnd.y + 12*dpr);
+
+    sctx.textAlign = "right";
+    sctx.textBaseline = "middle";
+    sctx.fillText(`Visceral  ${Math.round(fracVis*100)}%`, VisEnd.x - 10*dpr, VisEnd.y);
+    sctx.textBaseline = "top";
+    sctx.fillText(`ΔP ${Math.round(dpVis)} mmHg`, VisEnd.x - 10*dpr, VisEnd.y + 12*dpr);
   }
 
-  // Buttons (quick scenarios)
+  function updateSystem(){
+    const mapNow = Number(map.value);
+    const hctPct = Number(sysHct.value);
+    const rCutNow = Number(rCut.value);
+    const rVisNow = Number(rVis.value);
+
+    const muRel = hctToMuRel(hctPct/100);
+
+    mapVal.textContent = fmt(mapNow,0);
+    sysHctVal.textContent = fmt(hctPct,0);
+    rCutVal.textContent = fmt(rCutNow,2);
+    rVisVal.textContent = fmt(rVisNow,2);
+
+    sysHctFill.style.width = `${hctPct}%`;
+    sysPlasmaFill.style.width = `${100 - hctPct}%`;
+    sysMuBadge.textContent = `μ: ${fmt(muRel,2)}×`;
+
+    // Effective branch ΔP (radius-coupled, conceptual)
+    const dpCut = mapNow * dpFactorFromRadius(rCutNow, Number(rCut.min), Number(rCut.max));
+    const dpVis = mapNow * dpFactorFromRadius(rVisNow, Number(rVis.min), Number(rVis.max));
+
+    // Bed resistances
+    const Rcut = bedR(muRel, rCutNow);
+    const Rvis = bedR(muRel, rVisNow);
+
+    // Flows (using branch-specific ΔP)
+    const Qcut = calcQ(dpCut, rCutNow, muRel, 1.0);
+    const Qvis = calcQ(dpVis, rVisNow, muRel, 1.0);
+
+    const Qtot = Qcut + Qvis;
+
+    const fracCut = Qcut / Qtot;
+    const fracVis = Qvis / Qtot;
+
+    qTotOut.textContent = fmt(Qtot,2);
+    qTotRel.textContent = `${fmt(Qtot / QT_BASE,2)}×`;
+
+    dpCutBadge.textContent = `Cut ΔP: ${fmt(dpCut,0)} mmHg`;
+    dpVisBadge.textContent = `Vis ΔP: ${fmt(dpVis,0)} mmHg`;
+
+    shareCut.textContent = `${fmt(fracCut*100,0)}%`;
+    shareVis.textContent = `${fmt(fracVis*100,0)}%`;
+    fillCut.style.width = `${fmt(fracCut*100,0)}%`;
+    fillVis.style.width = `${fmt(fracVis*100,0)}%`;
+
+    const qTotalRatio = Qtot / QT_BASE;
+    drawJunction2(fracCut, fracVis, qTotalRatio, dpCut, dpVis);
+
+    updateLiveChips();
+  }
+
+  function updateLiveChips(){
+    const inSingle = tabSingle.getAttribute("aria-selected") === "true";
+    if (inSingle){
+      const dpNow = Number(dp.value);
+      const rNow = Number(r.value);
+      const hctPct = Number(hct.value);
+      const lNow = Number(len.value);
+
+      const muRel = hctToMuRel(hctPct/100);
+      const muEff = apparentMu(muRel, rNow);
+
+      const qNow = calcQ(dpNow, rNow, muEff, lNow);
+      const rNowRes = calcR(rNow, muEff, lNow);
+
+      liveQ.textContent = `Q: ${fmt(qNow,2)}`;
+      liveR.textContent = `R: ${fmt(rNowRes,4)}`;
+    } else {
+      const mapNow = Number(map.value);
+      const hctPct = Number(sysHct.value);
+      const muRel = hctToMuRel(hctPct/100);
+
+      const rCutNow = Number(rCut.value);
+      const rVisNow = Number(rVis.value);
+
+      const dpCut = mapNow * dpFactorFromRadius(rCutNow, Number(rCut.min), Number(rCut.max));
+      const dpVis = mapNow * dpFactorFromRadius(rVisNow, Number(rVis.min), Number(rVis.max));
+
+      const Qcut = calcQ(dpCut, rCutNow, muRel, 1.0);
+      const Qvis = calcQ(dpVis, rVisNow, muRel, 1.0);
+      const Qtot = Qcut + Qvis;
+
+      // show a simple "Rlike" as (MAP / Qtot) for chip (not shown elsewhere)
+      const Rlike = mapNow / Math.max(1e-9, Qtot);
+
+      liveQ.textContent = `Qtotal: ${fmt(Qtot,2)}`;
+      liveR.textContent = `MAP/Q: ${fmt(Rlike,3)}`;
+    }
+  }
+
+  // ---------- Buttons ----------
+  // Single
   el("vasodilate").addEventListener("click", () => {
     r.value = clamp(Number(r.value) * 1.20, Number(r.min), Number(r.max));
-    update();
+    updateSingle();
   });
   el("vasoconstrict").addEventListener("click", () => {
     r.value = clamp(Number(r.value) * 0.80, Number(r.min), Number(r.max));
-    update();
+    updateSingle();
   });
   el("anemia").addEventListener("click", () => {
-    v.value = clamp(Number(v.value) * 0.80, Number(v.min), Number(v.max));
-    update();
+    hct.value = clamp(Number(hct.value) - 6, Number(hct.min), Number(hct.max));
+    updateSingle();
   });
   el("poly").addEventListener("click", () => {
-    v.value = clamp(Number(v.value) * 1.35, Number(v.min), Number(v.max));
-    update();
+    hct.value = clamp(Number(hct.value) + 6, Number(hct.min), Number(hct.max));
+    updateSingle();
   });
-  el("angio").addEventListener("click", () => {
-    l.value = clamp(Number(l.value) * 1.35, Number(l.min), Number(l.max));
-    update();
-  });
-  el("reset").addEventListener("click", () => {
-    dp.value = BASE.dp;
-    r.value  = BASE.r;
-    v.value  = BASE.v;
-    l.value  = BASE.l;
-    update();
+  el("resetSingle").addEventListener("click", () => {
+    dp.value = BASE1.dp; r.value = BASE1.r; hct.value = BASE1.hct; len.value = BASE1.l;
+    updateSingle();
   });
 
-  // Slider events
-  [dp,r,v,l].forEach(s => s.addEventListener("input", update));
+  // System
+  el("cutDilate").addEventListener("click", () => {
+    rCut.value = clamp(Number(rCut.value) * 1.20, Number(rCut.min), Number(rCut.max));
+    updateSystem();
+  });
+  el("cutConstrict").addEventListener("click", () => {
+    rCut.value = clamp(Number(rCut.value) * 0.80, Number(rCut.min), Number(rCut.max));
+    updateSystem();
+  });
+  el("visDilate").addEventListener("click", () => {
+    rVis.value = clamp(Number(rVis.value) * 1.20, Number(rVis.min), Number(rVis.max));
+    updateSystem();
+  });
+  el("visConstrict").addEventListener("click", () => {
+    rVis.value = clamp(Number(rVis.value) * 0.80, Number(rVis.min), Number(rVis.max));
+    updateSystem();
+  });
+  el("resetSystem").addEventListener("click", () => {
+    map.value = BASE2.map; sysHct.value = BASE2.hct;
+    rCut.value = BASE2.rCut; rVis.value = BASE2.rVis;
+    updateSystem();
+  });
 
-  // Animate
+  // ---------- Events ----------
+  [dp,r,hct,len].forEach(s => s.addEventListener("input", updateSingle));
+  [map,sysHct,rCut,rVis].forEach(s => s.addEventListener("input", updateSystem));
+  window.addEventListener("resize", () => { updateSingle(); updateSystem(); });
+
+  // ---------- Animation loop ----------
   function tick(){
     t++;
-    const dpNow = Number(dp.value);
-    const rNow  = Number(r.value);
-    const vNow  = Number(v.value);
-    const lNow  = Number(l.value);
-    const qNow = calcQ(dpNow, rNow, vNow, lNow);
-    drawVessel(rNow, qNow);
+    const inSingle = tabSingle.getAttribute("aria-selected") === "true";
+    if (inSingle){
+      const dpNow = Number(dp.value);
+      const rNow = Number(r.value);
+      const hctPct = Number(hct.value);
+      const lNow = Number(len.value);
+
+      const muRel = hctToMuRel(hctPct/100);
+      const muEff = apparentMu(muRel, rNow);
+
+      const qNow = calcQ(dpNow, rNow, muEff, lNow);
+      drawVessel(rNow, qNow / Q1_BASE);
+    } else {
+      const mapNow = Number(map.value);
+      const hctPct = Number(sysHct.value);
+      const muRel = hctToMuRel(hctPct/100);
+
+      const rCutNow = Number(rCut.value);
+      const rVisNow = Number(rVis.value);
+
+      const dpCut = mapNow * dpFactorFromRadius(rCutNow, Number(rCut.min), Number(rCut.max));
+      const dpVis = mapNow * dpFactorFromRadius(rVisNow, Number(rVis.min), Number(rVis.max));
+
+      const Qcut = calcQ(dpCut, rCutNow, muRel, 1.0);
+      const Qvis = calcQ(dpVis, rVisNow, muRel, 1.0);
+      const Qtot = Qcut + Qvis;
+
+      const fracCut = Qcut / Qtot;
+      const fracVis = Qvis / Qtot;
+
+      const qTotalRatio = Qtot / QT_BASE;
+      drawJunction2(fracCut, fracVis, qTotalRatio, dpCut, dpVis);
+    }
     requestAnimationFrame(tick);
   }
 
-  window.addEventListener("resize", update);
-
-  // init
-  update();
+  // ---------- Init ----------
+  setTab("single");
+  updateSingle();
+  updateSystem();
   requestAnimationFrame(tick);
 </script>
 </body>
