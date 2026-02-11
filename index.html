@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Hemodynamics Interactive — Flow & Redistribution</title>
+  <title>Hemodynamics Interactive — Resistance & Redistribution</title>
   <style>
     :root{
       --bg:#f8f4ef;
@@ -52,7 +52,7 @@
       color:var(--muted);
       font-size:12.5px;
       line-height:1.35;
-      max-width:780px;
+      max-width:820px;
     }
 
     .wrap{
@@ -308,10 +308,7 @@
       box-shadow:none;
     }
 
-    .vizCard{
-      display:grid;
-      gap:12px;
-    }
+    .vizCard{ display:grid; gap:12px; }
     .canvasWrap{
       background: var(--panel2);
       border:1px solid var(--border);
@@ -319,21 +316,14 @@
       padding:10px;
       overflow:hidden;
     }
-    canvas{
-      width:100%;
-      height:220px;
-      display:block;
-    }
+    canvas{ width:100%; height:220px; display:block; }
 
     .splitBars{
       display:grid;
       gap:10px;
       margin-top:10px;
     }
-    .barRow{
-      display:grid;
-      gap:8px;
-    }
+    .barRow{ display:grid; gap:8px; }
     .barTop{
       display:flex;
       justify-content:space-between;
@@ -379,11 +369,12 @@
   <div class="titleBlock">
     <h1>Hemodynamics Interactive</h1>
     <div class="sub">
-      Explore how changes in key variables alter blood flow in a vessel, and how arteriolar radius can redistribute flow across the body.
+      Focus: arterioles regulate blood flow by regulating <b>resistance</b>. In this lab, pressure is held constant in the background
+      so you can isolate the relationships between <b>radius</b>, <b>resistance</b>, and <b>flow</b> (including redistribution in thermoregulation).
     </div>
   </div>
 
-  <div class="chipRow" aria-label="status chips">
+  <div class="chipRow">
     <div class="chip"><span class="dot"></span><span id="chipMode">Single Vessel</span></div>
     <div class="chip"><span class="dot alt"></span><span>Live</span></div>
   </div>
@@ -408,48 +399,39 @@
       <div class="card">
         <div class="sectionHead">
           <h2>Controls</h2>
-          <span class="miniPill">Q = (ΔP · r⁴) / (μ · L)</span>
+          <span class="miniPill">ΔP held constant → Q ∝ r⁴ / (μ · L)</span>
         </div>
 
         <div class="controls">
           <div class="control">
             <div class="controlTop">
-              <label for="dp">ΔP</label>
-              <div class="val"><span id="dpVal"></span> mmHg</div>
+              <label for="r1">Radius (r)</label>
+              <div class="val"><span id="r1Val"></span> ×</div>
             </div>
-            <input id="dp" type="range" min="10" max="120" step="1" value="60"/>
+            <input id="r1" type="range" min="0.8" max="3.0" step="0.05" value="1.90"/>
           </div>
 
           <div class="control">
             <div class="controlTop">
-              <label for="r">Radius (r)</label>
-              <div class="val"><span id="rVal"></span> ×</div>
+              <label for="hct1">Hematocrit (Hct)</label>
+              <div class="val"><span id="hct1Val"></span>%</div>
             </div>
-            <!-- default set mid-ish -->
-            <input id="r" type="range" min="0.8" max="3.0" step="0.05" value="1.90"/>
-          </div>
-
-          <div class="control">
-            <div class="controlTop">
-              <label for="hct">Hematocrit (Hct)</label>
-              <div class="val"><span id="hctVal"></span>%</div>
-            </div>
-            <input id="hct" type="range" min="25" max="65" step="1" value="45"/>
-            <div class="hctRow" aria-label="hematocrit visualization">
+            <input id="hct1" type="range" min="25" max="65" step="1" value="45"/>
+            <div class="hctRow">
               <div class="tube" title="Hematocrit tube (conceptual)">
-                <div class="fill" id="hctFill"></div>
-                <div class="plasma" id="plasmaFill"></div>
+                <div class="fill" id="hct1Fill"></div>
+                <div class="plasma" id="plasma1Fill"></div>
               </div>
-              <div class="miniBadge" id="muBadge">μ: 1.00×</div>
+              <div class="miniBadge" id="mu1Badge">μ: 1.00×</div>
             </div>
           </div>
 
           <div class="control">
             <div class="controlTop">
-              <label for="len">Length (L)</label>
-              <div class="val"><span id="lVal"></span> ×</div>
+              <label for="l1">Length (L)</label>
+              <div class="val"><span id="l1Val"></span> ×</div>
             </div>
-            <input id="len" type="range" min="0.7" max="3.0" step="0.05" value="1.0"/>
+            <input id="l1" type="range" min="0.7" max="3.0" step="0.05" value="1.00"/>
           </div>
         </div>
 
@@ -457,25 +439,25 @@
           <div class="kpi">
             <div class="t">Flow (Q)</div>
             <div class="n">
-              <span id="qOut">—</span>
-              <span class="mini" id="qRel">—</span>
+              <span id="q1Out">—</span>
+              <span class="mini" id="q1Rel">—</span>
             </div>
           </div>
           <div class="kpi">
             <div class="t">Resistance (R)</div>
             <div class="n">
-              <span id="rOut">—</span>
-              <span class="mini" id="rRel">—</span>
+              <span id="r1Out">—</span>
+              <span class="mini" id="r1Rel">—</span>
             </div>
           </div>
         </div>
 
         <div class="quickRow">
-          <button id="vasodilate">+ r</button>
-          <button id="vasoconstrict">− r</button>
-          <button class="ghost" id="anemia">↓ Hct</button>
-          <button class="ghost" id="poly">↑ Hct</button>
-          <button class="secondary" id="resetSingle">Reset</button>
+          <button id="r1Dilate">+ r</button>
+          <button id="r1Constrict">− r</button>
+          <button class="ghost" id="hct1Down">↓ Hct</button>
+          <button class="ghost" id="hct1Up">↑ Hct</button>
+          <button class="secondary" id="reset1">Reset</button>
         </div>
       </div>
 
@@ -484,7 +466,6 @@
           <h2>Vessel visualization</h2>
           <span class="miniPill">radius + relative speed</span>
         </div>
-
         <div class="canvasWrap">
           <canvas id="vessel"></canvas>
         </div>
@@ -498,31 +479,30 @@
       <div class="card">
         <div class="sectionHead">
           <h2>Controls</h2>
-          <!-- keep MAP and show branch ΔP values in KPIs -->
-          <span class="miniPill">MAP + two beds</span>
+          <span class="miniPill">Parallel beds: same MAP → distribution set by R</span>
         </div>
 
         <div class="controls">
           <div class="control">
             <div class="controlTop">
-              <label for="map">MAP</label>
+              <label>MAP (held constant)</label>
               <div class="val"><span id="mapVal"></span> mmHg</div>
             </div>
-            <input id="map" type="range" min="50" max="140" step="1" value="90"/>
+            <input type="range" min="90" max="90" step="1" value="90" disabled />
           </div>
 
           <div class="control">
             <div class="controlTop">
-              <label for="sysHct">Hematocrit (Hct)</label>
-              <div class="val"><span id="sysHctVal"></span>%</div>
+              <label for="hct2">Hematocrit (Hct)</label>
+              <div class="val"><span id="hct2Val"></span>%</div>
             </div>
-            <input id="sysHct" type="range" min="25" max="65" step="1" value="45"/>
-            <div class="hctRow" aria-label="system hematocrit visualization">
+            <input id="hct2" type="range" min="25" max="65" step="1" value="45"/>
+            <div class="hctRow">
               <div class="tube" title="Hematocrit tube (conceptual)">
-                <div class="fill" id="sysHctFill"></div>
-                <div class="plasma" id="sysPlasmaFill"></div>
+                <div class="fill" id="hct2Fill"></div>
+                <div class="plasma" id="plasma2Fill"></div>
               </div>
-              <div class="miniBadge" id="sysMuBadge">μ: 1.00×</div>
+              <div class="miniBadge" id="mu2Badge">μ: 1.00×</div>
             </div>
           </div>
 
@@ -531,7 +511,6 @@
               <label for="rCut">Cutaneous radius (r)</label>
               <div class="val"><span id="rCutVal"></span> ×</div>
             </div>
-            <!-- default set mid-ish -->
             <input id="rCut" type="range" min="0.8" max="3.0" step="0.05" value="1.90"/>
           </div>
 
@@ -540,7 +519,6 @@
               <label for="rVis">Visceral radius (r)</label>
               <div class="val"><span id="rVisVal"></span> ×</div>
             </div>
-            <!-- default set mid-ish -->
             <input id="rVis" type="range" min="0.8" max="3.0" step="0.05" value="1.90"/>
           </div>
         </div>
@@ -554,15 +532,15 @@
             </div>
           </div>
           <div class="kpi">
-            <div class="t">Branch ΔP</div>
-            <div class="n" style="font-size:16px">
-              <span class="mini" id="dpCutBadge">Cut ΔP: —</span>
-              <span class="mini" id="dpVisBadge">Vis ΔP: —</span>
+            <div class="t">Equivalent Resistance (Req)</div>
+            <div class="n">
+              <span id="reqOut">—</span>
+              <span class="mini" id="reqRel">—</span>
             </div>
           </div>
         </div>
 
-        <div class="splitBars" aria-label="flow split">
+        <div class="splitBars">
           <div class="barRow">
             <div class="barTop">
               <span>Cutaneous share</span>
@@ -590,16 +568,15 @@
           <button id="cutConstrict">Cut − r</button>
           <button id="visDilate">Vis + r</button>
           <button id="visConstrict">Vis − r</button>
-          <button class="secondary" id="resetSystem">Reset</button>
+          <button class="secondary" id="reset2">Reset</button>
         </div>
       </div>
 
       <aside class="card vizCard">
         <div class="sectionHead">
           <h2>Redistribution visualization</h2>
-          <span class="miniPill">zoomed junction</span>
+          <span class="miniPill">junction + particles</span>
         </div>
-
         <div class="canvasWrap">
           <canvas id="system"></canvas>
         </div>
@@ -622,49 +599,18 @@
     return Math.pow(num / den, -2);
   }
 
-  // Optional subtle small-vessel apparent viscosity correction (kept gentle)
+  // Keep subtle apparent viscosity correction optional (small effect)
   function apparentMu(muRel, rNow){
-    const corr = 1 - 0.12 * clamp((1.2 - rNow), 0, 1); // up to -12%
+    const corr = 1 - 0.12 * clamp((1.2 - rNow), 0, 1);
     return muRel * corr;
   }
 
-  // ---------- Single vessel model ----------
-  const BASE1 = { dp: 60, r: 1.90, hct: 45, l: 1.00 };
+  // ---------- Model core (pressure held constant -> scale only) ----------
+  // We set a hidden constant ΔP for the single-vessel tab.
+  const DP_CONST = 60;
+
   const calcQ = (dp, r, mu, l) => (dp * Math.pow(r,4)) / (mu * l);
   const calcR = (r, mu, l) => (mu * l) / Math.pow(r,4);
-
-  const MU1_BASE = apparentMu(hctToMuRel(BASE1.hct/100), BASE1.r);
-  const Q1_BASE  = calcQ(BASE1.dp, BASE1.r, MU1_BASE, BASE1.l);
-  const R1_BASE  = calcR(BASE1.r, MU1_BASE, BASE1.l);
-
-  // ---------- Systemic redistribution model (two beds) ----------
-  // We keep MAP, but we ALSO compute an "effective branch ΔP" that varies with radius.
-  // This is a conceptual "Boyle-like" coupling the student can notice: changing r changes ΔP shown in the branch.
-  const BASE2 = { map: 90, hct: 45, rCut: 1.90, rVis: 1.90 };
-
-  // A smooth bounded mapping from radius -> effective ΔP fraction of MAP.
-  // Larger r -> higher effective perfusion pressure; smaller r -> lower.
-  function dpFactorFromRadius(rNow, rMin=0.8, rMax=3.0){
-    const mid = (rMin + rMax) / 2; // ~1.9
-    const x = (rNow - mid) / (rMax - rMin); // ~[-0.5, 0.5]
-    const f = 0.78 + 0.40 * x;              // bounded-ish
-    return clamp(f, 0.55, 1.05);
-  }
-
-  // Bed resistance ~ μ / r^4 (conceptual; length folded into constant)
-  const bedR = (mu, r) => mu / Math.pow(r,4);
-
-  // Baseline totals for relative displays
-  const MU2_BASE = hctToMuRel(BASE2.hct/100);
-  const DP_CUT_BASE = BASE2.map * dpFactorFromRadius(BASE2.rCut);
-  const DP_VIS_BASE = BASE2.map * dpFactorFromRadius(BASE2.rVis);
-
-  const R_CUT_BASE = bedR(MU2_BASE, BASE2.rCut);
-  const R_VIS_BASE = bedR(MU2_BASE, BASE2.rVis);
-
-  const Q_CUT_BASE = calcQ(DP_CUT_BASE, BASE2.rCut, MU2_BASE, 1.0);
-  const Q_VIS_BASE = calcQ(DP_VIS_BASE, BASE2.rVis, MU2_BASE, 1.0);
-  const QT_BASE = Q_CUT_BASE + Q_VIS_BASE;
 
   // ---------- Tabs ----------
   const tabSingle = el("tabSingle");
@@ -686,33 +632,33 @@
   tabSingle.addEventListener("click", () => setTab("single"));
   tabSystem.addEventListener("click", () => setTab("system"));
 
-  // ---------- Single DOM ----------
-  const dp = el("dp"), r = el("r"), hct = el("hct"), len = el("len");
-  const dpVal = el("dpVal"), rVal = el("rVal"), hctVal = el("hctVal"), lVal = el("lVal");
-  const hctFill = el("hctFill"), plasmaFill = el("plasmaFill"), muBadge = el("muBadge");
-  const qOut = el("qOut"), rOut = el("rOut"), qRel = el("qRel"), rRel = el("rRel");
+  // ---------- Header live chips ----------
+  const liveQ = el("liveQ");
+  const liveR = el("liveR");
 
-  // Single canvas
-  const vessel = el("vessel");
-  const vctx = vessel.getContext("2d");
+  // ---------- Single DOM ----------
+  const r1 = el("r1"), hct1 = el("hct1"), l1 = el("l1");
+  const r1Val = el("r1Val"), hct1Val = el("hct1Val"), l1Val = el("l1Val");
+  const hct1Fill = el("hct1Fill"), plasma1Fill = el("plasma1Fill"), mu1Badge = el("mu1Badge");
+  const q1Out = el("q1Out"), r1Out = el("r1Out"), q1Rel = el("q1Rel"), r1Rel = el("r1Rel");
 
   // ---------- System DOM ----------
-  const map = el("map"), sysHct = el("sysHct"), rCut = el("rCut"), rVis = el("rVis");
-  const mapVal = el("mapVal"), sysHctVal = el("sysHctVal"), rCutVal = el("rCutVal"), rVisVal = el("rVisVal");
-  const sysHctFill = el("sysHctFill"), sysPlasmaFill = el("sysPlasmaFill"), sysMuBadge = el("sysMuBadge");
+  const MAP_CONST = 90;
+  el("mapVal").textContent = fmt(MAP_CONST,0);
 
+  const hct2 = el("hct2"), rCut = el("rCut"), rVis = el("rVis");
+  const hct2Val = el("hct2Val"), rCutVal = el("rCutVal"), rVisVal = el("rVisVal");
+  const hct2Fill = el("hct2Fill"), plasma2Fill = el("plasma2Fill"), mu2Badge = el("mu2Badge");
   const qTotOut = el("qTotOut"), qTotRel = el("qTotRel");
-  const dpCutBadge = el("dpCutBadge"), dpVisBadge = el("dpVisBadge");
+  const reqOut = el("reqOut"), reqRel = el("reqRel");
   const shareCut = el("shareCut"), shareVis = el("shareVis");
   const fillCut = el("fillCut"), fillVis = el("fillVis");
 
-  // System canvas
+  // ---------- Canvas ----------
+  const vessel = el("vessel");
+  const vctx = vessel.getContext("2d");
   const system = el("system");
   const sctx = system.getContext("2d");
-
-  // KPI chips in header
-  const liveQ = el("liveQ");
-  const liveR = el("liveR");
 
   function fitCanvas(c){
     const rect = c.getBoundingClientRect();
@@ -722,8 +668,22 @@
     return dpr;
   }
 
-  // ---------- Single rendering ----------
+  // ---------- Baselines (for relative displays) ----------
+  const BASE1 = { r: 1.90, hct: 45, l: 1.00 };
+  const MU1_BASE = apparentMu(hctToMuRel(BASE1.hct/100), BASE1.r);
+  const Q1_BASE  = calcQ(DP_CONST, BASE1.r, MU1_BASE, BASE1.l);
+  const R1_BASE  = calcR(BASE1.r, MU1_BASE, BASE1.l);
+
+  const BASE2 = { hct: 45, rCut: 1.90, rVis: 1.90 };
+  const MU2_BASE = hctToMuRel(BASE2.hct/100);
+  const RCUT_BASE = calcR(BASE2.rCut, MU2_BASE, 1.0);
+  const RVIS_BASE = calcR(BASE2.rVis, MU2_BASE, 1.0);
+  const REQ_BASE = 1 / (1/RCUT_BASE + 1/RVIS_BASE);
+  const QT_BASE = MAP_CONST / REQ_BASE;
+
+  // ---------- Single vessel visualization ----------
   let t = 0;
+
   function drawVessel(rNow, qRatio){
     const dpr = fitCanvas(vessel);
     const w = vessel.width, h = vessel.height;
@@ -763,54 +723,40 @@
     vctx.textAlign = "left";
     vctx.textBaseline = "top";
     vctx.fillText(`r ${fmt(rNow,2)}×   Q ${fmt(qRatio,2)}×`, leftX, h*0.07);
-
-    vctx.globalAlpha = 0.65;
-    vctx.strokeStyle = "rgba(0,0,0,.26)";
-    vctx.lineWidth = 2*dpr;
-    vctx.beginPath();
-    vctx.moveTo(w*0.44, h*0.88);
-    vctx.lineTo(w*0.64, h*0.88);
-    vctx.lineTo(w*0.61, h*0.85);
-    vctx.moveTo(w*0.64, h*0.88);
-    vctx.lineTo(w*0.61, h*0.91);
-    vctx.stroke();
-    vctx.globalAlpha = 1;
   }
 
   function updateSingle(){
-    const dpNow = Number(dp.value);
-    const rNow  = Number(r.value);
-    const hctPct = Number(hct.value);
-    const lNow  = Number(len.value);
+    const rNow = Number(r1.value);
+    const hctPct = Number(hct1.value);
+    const lNow = Number(l1.value);
 
     const muRel = hctToMuRel(hctPct/100);
     const muEff = apparentMu(muRel, rNow);
 
-    dpVal.textContent = fmt(dpNow,0);
-    rVal.textContent  = fmt(rNow,2);
-    hctVal.textContent = fmt(hctPct,0);
-    lVal.textContent  = fmt(lNow,2);
+    r1Val.textContent = fmt(rNow,2);
+    hct1Val.textContent = fmt(hctPct,0);
+    l1Val.textContent = fmt(lNow,2);
 
-    hctFill.style.width = `${hctPct}%`;
-    plasmaFill.style.width = `${100 - hctPct}%`;
-    muBadge.textContent = `μ: ${fmt(muEff,2)}×`;
+    hct1Fill.style.width = `${hctPct}%`;
+    plasma1Fill.style.width = `${100 - hctPct}%`;
+    mu1Badge.textContent = `μ: ${fmt(muEff,2)}×`;
 
-    const qNow = calcQ(dpNow, rNow, muEff, lNow);
+    const qNow = calcQ(DP_CONST, rNow, muEff, lNow);
     const rNowRes = calcR(rNow, muEff, lNow);
 
     const qRatio = qNow / Q1_BASE;
     const rRatio = rNowRes / R1_BASE;
 
-    qOut.textContent = fmt(qNow,2);
-    rOut.textContent = fmt(rNowRes,4);
-    qRel.textContent = `${fmt(qRatio,2)}×`;
-    rRel.textContent = `${fmt(rRatio,2)}×`;
+    q1Out.textContent = fmt(qNow,2);
+    r1Out.textContent = fmt(rNowRes,4);
+    q1Rel.textContent = `${fmt(qRatio,2)}×`;
+    r1Rel.textContent = `${fmt(rRatio,2)}×`;
 
     drawVessel(rNow, qRatio);
     updateLiveChips();
   }
 
-  // ---------- System rendering: zoomed junction w/ vessel-style walls + particles ----------
+  // ---------- System visualization ----------
   const lerp = (a,b,t) => a + (b-a)*t;
 
   function drawTube(ctx, a, b, radiusPx, stroke){
@@ -863,29 +809,25 @@
     }
   }
 
-  function drawJunction2(fracCut, fracVis, qTotalRatio, dpCut, dpVis){
+  function drawJunction2(fracCut, fracVis, qTotalRatio){
     const dpr = fitCanvas(system);
     const w = system.width, h = system.height;
     sctx.clearRect(0,0,w,h);
 
-    // zoomed junction view
     const J = { x: w*0.50, y: h*0.46 };
     const trunkTop = { x: w*0.50, y: h*0.12 };
     const CutEnd = { x: w*0.20, y: h*0.82 };
     const VisEnd = { x: w*0.80, y: h*0.82 };
 
-    // thickness based on shares (bounded)
     const base = h * 0.060;
     const rTrunk = clamp(base * (0.80 + qTotalRatio*0.20), base*0.65, base*1.15);
     const rCutPx = clamp(base * (0.45 + fracCut*1.35), base*0.35, base*1.80);
     const rVisPx = clamp(base * (0.45 + fracVis*1.35), base*0.35, base*1.80);
 
-    // walls (neutral)
     drawTube(sctx, trunkTop, J, rTrunk, "rgba(0,0,0,.22)");
     drawTube(sctx, J, CutEnd, rCutPx, "rgba(0,0,0,.20)");
     drawTube(sctx, J, VisEnd, rVisPx, "rgba(0,0,0,.20)");
 
-    // particles
     const trunkSpeed = clamp(qTotalRatio, 0.25, 3.0);
     const cutSpeed = clamp(trunkSpeed * (0.65 + fracCut*1.1), 0.25, 3.2);
     const visSpeed = clamp(trunkSpeed * (0.65 + fracVis*1.1), 0.25, 3.2);
@@ -899,7 +841,6 @@
     drawParticlesOnSegment(sctx, J, CutEnd, rCutPx, nC, cutSpeed, "rgba(139,47,47,.82)", 0.18);
     drawParticlesOnSegment(sctx, J, VisEnd, rVisPx, nV, visSpeed, "rgba(212,160,23,.82)", 0.42);
 
-    // labels (minimal but include ΔP cues)
     sctx.fillStyle = "rgba(95,95,95,.95)";
     sctx.font = `${12*dpr}px system-ui`;
 
@@ -910,126 +851,108 @@
     sctx.textBaseline = "middle";
     sctx.textAlign = "left";
     sctx.fillText(`Cutaneous  ${Math.round(fracCut*100)}%`, CutEnd.x + 10*dpr, CutEnd.y);
-    sctx.textBaseline = "top";
-    sctx.fillText(`ΔP ${Math.round(dpCut)} mmHg`, CutEnd.x + 10*dpr, CutEnd.y + 12*dpr);
 
     sctx.textAlign = "right";
-    sctx.textBaseline = "middle";
     sctx.fillText(`Visceral  ${Math.round(fracVis*100)}%`, VisEnd.x - 10*dpr, VisEnd.y);
-    sctx.textBaseline = "top";
-    sctx.fillText(`ΔP ${Math.round(dpVis)} mmHg`, VisEnd.x - 10*dpr, VisEnd.y + 12*dpr);
   }
 
   function updateSystem(){
-    const mapNow = Number(map.value);
-    const hctPct = Number(sysHct.value);
+    const hctPct = Number(hct2.value);
     const rCutNow = Number(rCut.value);
     const rVisNow = Number(rVis.value);
 
     const muRel = hctToMuRel(hctPct/100);
 
-    mapVal.textContent = fmt(mapNow,0);
-    sysHctVal.textContent = fmt(hctPct,0);
+    hct2Val.textContent = fmt(hctPct,0);
     rCutVal.textContent = fmt(rCutNow,2);
     rVisVal.textContent = fmt(rVisNow,2);
 
-    sysHctFill.style.width = `${hctPct}%`;
-    sysPlasmaFill.style.width = `${100 - hctPct}%`;
-    sysMuBadge.textContent = `μ: ${fmt(muRel,2)}×`;
+    hct2Fill.style.width = `${hctPct}%`;
+    plasma2Fill.style.width = `${100 - hctPct}%`;
+    mu2Badge.textContent = `μ: ${fmt(muRel,2)}×`;
 
-    // Effective branch ΔP (radius-coupled, conceptual)
-    const dpCut = mapNow * dpFactorFromRadius(rCutNow, Number(rCut.min), Number(rCut.max));
-    const dpVis = mapNow * dpFactorFromRadius(rVisNow, Number(rVis.min), Number(rVis.max));
+    // Resistances of each bed (parallel)
+    const Rcut = calcR(rCutNow, muRel, 1.0);
+    const Rvis = calcR(rVisNow, muRel, 1.0);
 
-    // Bed resistances
-    const Rcut = bedR(muRel, rCutNow);
-    const Rvis = bedR(muRel, rVisNow);
+    const Req = 1 / (1/Rcut + 1/Rvis);
 
-    // Flows (using branch-specific ΔP)
-    const Qcut = calcQ(dpCut, rCutNow, muRel, 1.0);
-    const Qvis = calcQ(dpVis, rVisNow, muRel, 1.0);
+    // Total flow given constant MAP
+    const Qtot = MAP_CONST / Req;
 
-    const Qtot = Qcut + Qvis;
+    // Branch flows (same MAP across beds; distribution set by resistance)
+    const Qcut = MAP_CONST / Rcut;
+    const Qvis = MAP_CONST / Rvis;
 
-    const fracCut = Qcut / Qtot;
-    const fracVis = Qvis / Qtot;
+    const total = Qcut + Qvis;
+    const fracCut = Qcut / total;
+    const fracVis = Qvis / total;
 
     qTotOut.textContent = fmt(Qtot,2);
     qTotRel.textContent = `${fmt(Qtot / QT_BASE,2)}×`;
 
-    dpCutBadge.textContent = `Cut ΔP: ${fmt(dpCut,0)} mmHg`;
-    dpVisBadge.textContent = `Vis ΔP: ${fmt(dpVis,0)} mmHg`;
+    reqOut.textContent = fmt(Req,4);
+    reqRel.textContent = `${fmt(Req / REQ_BASE,2)}×`;
 
     shareCut.textContent = `${fmt(fracCut*100,0)}%`;
     shareVis.textContent = `${fmt(fracVis*100,0)}%`;
     fillCut.style.width = `${fmt(fracCut*100,0)}%`;
     fillVis.style.width = `${fmt(fracVis*100,0)}%`;
 
-    const qTotalRatio = Qtot / QT_BASE;
-    drawJunction2(fracCut, fracVis, qTotalRatio, dpCut, dpVis);
-
+    drawJunction2(fracCut, fracVis, Qtot / QT_BASE);
     updateLiveChips();
   }
 
   function updateLiveChips(){
     const inSingle = tabSingle.getAttribute("aria-selected") === "true";
     if (inSingle){
-      const dpNow = Number(dp.value);
-      const rNow = Number(r.value);
-      const hctPct = Number(hct.value);
-      const lNow = Number(len.value);
-
+      const rNow = Number(r1.value);
+      const hctPct = Number(hct1.value);
+      const lNow = Number(l1.value);
       const muRel = hctToMuRel(hctPct/100);
       const muEff = apparentMu(muRel, rNow);
 
-      const qNow = calcQ(dpNow, rNow, muEff, lNow);
+      const qNow = calcQ(DP_CONST, rNow, muEff, lNow);
       const rNowRes = calcR(rNow, muEff, lNow);
 
       liveQ.textContent = `Q: ${fmt(qNow,2)}`;
       liveR.textContent = `R: ${fmt(rNowRes,4)}`;
     } else {
-      const mapNow = Number(map.value);
-      const hctPct = Number(sysHct.value);
+      const hctPct = Number(hct2.value);
       const muRel = hctToMuRel(hctPct/100);
-
       const rCutNow = Number(rCut.value);
       const rVisNow = Number(rVis.value);
 
-      const dpCut = mapNow * dpFactorFromRadius(rCutNow, Number(rCut.min), Number(rCut.max));
-      const dpVis = mapNow * dpFactorFromRadius(rVisNow, Number(rVis.min), Number(rVis.max));
-
-      const Qcut = calcQ(dpCut, rCutNow, muRel, 1.0);
-      const Qvis = calcQ(dpVis, rVisNow, muRel, 1.0);
-      const Qtot = Qcut + Qvis;
-
-      // show a simple "Rlike" as (MAP / Qtot) for chip (not shown elsewhere)
-      const Rlike = mapNow / Math.max(1e-9, Qtot);
+      const Rcut = calcR(rCutNow, muRel, 1.0);
+      const Rvis = calcR(rVisNow, muRel, 1.0);
+      const Req = 1 / (1/Rcut + 1/Rvis);
+      const Qtot = MAP_CONST / Req;
 
       liveQ.textContent = `Qtotal: ${fmt(Qtot,2)}`;
-      liveR.textContent = `MAP/Q: ${fmt(Rlike,3)}`;
+      liveR.textContent = `Req: ${fmt(Req,4)}`;
     }
   }
 
   // ---------- Buttons ----------
   // Single
-  el("vasodilate").addEventListener("click", () => {
-    r.value = clamp(Number(r.value) * 1.20, Number(r.min), Number(r.max));
+  el("r1Dilate").addEventListener("click", () => {
+    r1.value = clamp(Number(r1.value) * 1.20, Number(r1.min), Number(r1.max));
     updateSingle();
   });
-  el("vasoconstrict").addEventListener("click", () => {
-    r.value = clamp(Number(r.value) * 0.80, Number(r.min), Number(r.max));
+  el("r1Constrict").addEventListener("click", () => {
+    r1.value = clamp(Number(r1.value) * 0.80, Number(r1.min), Number(r1.max));
     updateSingle();
   });
-  el("anemia").addEventListener("click", () => {
-    hct.value = clamp(Number(hct.value) - 6, Number(hct.min), Number(hct.max));
+  el("hct1Down").addEventListener("click", () => {
+    hct1.value = clamp(Number(hct1.value) - 6, Number(hct1.min), Number(hct1.max));
     updateSingle();
   });
-  el("poly").addEventListener("click", () => {
-    hct.value = clamp(Number(hct.value) + 6, Number(hct.min), Number(hct.max));
+  el("hct1Up").addEventListener("click", () => {
+    hct1.value = clamp(Number(hct1.value) + 6, Number(hct1.min), Number(hct1.max));
     updateSingle();
   });
-  el("resetSingle").addEventListener("click", () => {
-    dp.value = BASE1.dp; r.value = BASE1.r; hct.value = BASE1.hct; len.value = BASE1.l;
+  el("reset1").addEventListener("click", () => {
+    r1.value = BASE1.r; hct1.value = BASE1.hct; l1.value = BASE1.l;
     updateSingle();
   });
 
@@ -1050,15 +973,16 @@
     rVis.value = clamp(Number(rVis.value) * 0.80, Number(rVis.min), Number(rVis.max));
     updateSystem();
   });
-  el("resetSystem").addEventListener("click", () => {
-    map.value = BASE2.map; sysHct.value = BASE2.hct;
-    rCut.value = BASE2.rCut; rVis.value = BASE2.rVis;
+  el("reset2").addEventListener("click", () => {
+    hct2.value = BASE2.hct;
+    rCut.value = BASE2.rCut;
+    rVis.value = BASE2.rVis;
     updateSystem();
   });
 
   // ---------- Events ----------
-  [dp,r,hct,len].forEach(s => s.addEventListener("input", updateSingle));
-  [map,sysHct,rCut,rVis].forEach(s => s.addEventListener("input", updateSystem));
+  [r1,hct1,l1].forEach(s => s.addEventListener("input", updateSingle));
+  [hct2,rCut,rVis].forEach(s => s.addEventListener("input", updateSystem));
   window.addEventListener("resize", () => { updateSingle(); updateSystem(); });
 
   // ---------- Animation loop ----------
@@ -1066,36 +990,36 @@
     t++;
     const inSingle = tabSingle.getAttribute("aria-selected") === "true";
     if (inSingle){
-      const dpNow = Number(dp.value);
-      const rNow = Number(r.value);
-      const hctPct = Number(hct.value);
-      const lNow = Number(len.value);
+      const rNow = Number(r1.value);
+      const hctPct = Number(hct1.value);
+      const lNow = Number(l1.value);
 
       const muRel = hctToMuRel(hctPct/100);
       const muEff = apparentMu(muRel, rNow);
 
-      const qNow = calcQ(dpNow, rNow, muEff, lNow);
+      const qNow = calcQ(DP_CONST, rNow, muEff, lNow);
       drawVessel(rNow, qNow / Q1_BASE);
     } else {
-      const mapNow = Number(map.value);
-      const hctPct = Number(sysHct.value);
+      // Redraw junction smoothly
+      const hctPct = Number(hct2.value);
       const muRel = hctToMuRel(hctPct/100);
-
       const rCutNow = Number(rCut.value);
       const rVisNow = Number(rVis.value);
 
-      const dpCut = mapNow * dpFactorFromRadius(rCutNow, Number(rCut.min), Number(rCut.max));
-      const dpVis = mapNow * dpFactorFromRadius(rVisNow, Number(rVis.min), Number(rVis.max));
+      const Rcut = calcR(rCutNow, muRel, 1.0);
+      const Rvis = calcR(rVisNow, muRel, 1.0);
 
-      const Qcut = calcQ(dpCut, rCutNow, muRel, 1.0);
-      const Qvis = calcQ(dpVis, rVisNow, muRel, 1.0);
-      const Qtot = Qcut + Qvis;
+      const Qcut = MAP_CONST / Rcut;
+      const Qvis = MAP_CONST / Rvis;
 
-      const fracCut = Qcut / Qtot;
-      const fracVis = Qvis / Qtot;
+      const total = Qcut + Qvis;
+      const fracCut = Qcut / total;
+      const fracVis = Qvis / total;
 
-      const qTotalRatio = Qtot / QT_BASE;
-      drawJunction2(fracCut, fracVis, qTotalRatio, dpCut, dpVis);
+      const Req = 1 / (1/Rcut + 1/Rvis);
+      const Qtot = MAP_CONST / Req;
+
+      drawJunction2(fracCut, fracVis, Qtot / QT_BASE);
     }
     requestAnimationFrame(tick);
   }
